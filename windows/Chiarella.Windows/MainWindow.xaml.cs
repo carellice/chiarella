@@ -58,6 +58,8 @@ public sealed partial class MainWindow : Window
         {
             var card = new SoundCard(sound);
             card.Toggled += () => _mixer.Toggle(sound.Id);
+            card.DetailsRequested += c => Detail.Open(c.Sound, c, _mixer, _store);
+
             card.VolumeChanged += v =>
             {
                 _mixer.SetVolume(sound.Id, v);
@@ -67,6 +69,7 @@ public sealed partial class MainWindow : Window
             SoundsPanel.Children.Add(card);
         }
 
+        Detail.VolumeChanged += SaveSoon;
         Relax.Closed += () =>
         {
             HomeView.Visibility = Visibility.Visible;
@@ -102,6 +105,7 @@ public sealed partial class MainWindow : Window
             StatusEq.Tick(t);
         }
         Relax.Tick(t);
+        Detail.Tick(t);
         var s = 0.94 + 0.08 * (Math.Sin(t / 4 * Math.PI) + 1) / 2;
         RelaxBadgeScale.ScaleX = RelaxBadgeScale.ScaleY = s;
     }
@@ -123,6 +127,7 @@ public sealed partial class MainWindow : Window
         SoundsHint.Foreground = (Brush)Application.Current.Resources[n > 0 ? "PeachBrush" : "FaintBrush"];
         RenderPlayer();
         RenderPresets();
+        Detail.Refresh();
     }
 
     private void RenderPlayer()
@@ -302,7 +307,7 @@ public sealed partial class MainWindow : Window
 
     private void Root_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key != VirtualKey.Space || Relax.Visibility == Visibility.Visible) return;
+        if (e.Key != VirtualKey.Space || Relax.Visibility == Visibility.Visible || Detail.IsOpen) return;
         if (e.OriginalSource is TextBox or Slider or Button or SoundCard) return;
         _mixer.TogglePlay();
         e.Handled = true;
@@ -464,6 +469,7 @@ public sealed partial class MainWindow : Window
         [
             ("Accendi e mescola", "Clic su una card per accendere un suono, di nuovo per spegnerlo. Puoi accenderne quanti vuoi insieme."),
             ("Regola il volume", "Ogni suono acceso ha il suo cursore."),
+            ("Dettaglio del suono", "Clic destro (o pressione lunga sul touch) su una card: stato, volume, descrizione e suoni da abbinare."),
             ("Profili", "Salva il mix corrente con «Salva mix» e ritrovalo con un clic. Clic destro per eliminarlo."),
             ("Timer", "Dalla barra in basso: allo scadere i suoni sfumano fino al silenzio."),
             ("Un momento per te", "Scegli le tue passioni: dopo un breve respiro guidato ti propongo cosa fare per rilassarti."),

@@ -14,6 +14,22 @@ const SOUNDS = [
   { id: "phon", name: "Phon", tagline: "Soffio caldo e costante", icon: "🌀", primary: "#EC4899", secondary: "#FFB4D9", ambience: "airflow" },
 ];
 
+// Dettaglio dei suoni (clic destro o pressione lunga su una card): descrizione, momenti ideali, abbinamenti.
+const MOODS = { sleep: "🌙  Dormire", focus: "🎯  Concentrarsi", relax: "🍃  Rilassarsi" };
+const SOUND_INFO = {
+  pioggia_dolce: { desc: "Una pioggia leggera e regolare su foglie e tetti: copre i rumori di fondo senza mai diventare invadente.", moods: ["sleep", "focus"], pairs: ["stufa_elettrica", "vento", "falo"] },
+  stufa_elettrica: { desc: "Il ronzio caldo e costante di una stufa: un rumore bianco morbido, che isola e accompagna.", moods: ["sleep", "focus"], pairs: ["pioggia_dolce", "vento", "temporale"] },
+  temporale: { desc: "Tuoni lontani che rotolano sopra la pioggia battente: perfetto per sentirsi al riparo.", moods: ["sleep", "relax"], pairs: ["pioggia_dolce", "falo", "stufa_elettrica"] },
+  mare: { desc: "Onde che arrivano e si ritirano sulla riva, con un ritmo lento che invita a respirare.", moods: ["relax", "sleep"], pairs: ["vento", "grilli", "falo"] },
+  foresta: { desc: "Foglie mosse dal vento e il canto degli uccelli: una passeggiata nel bosco senza muoversi.", moods: ["focus", "relax"], pairs: ["fiume", "vento", "cascata"] },
+  cascata: { desc: "Acqua che precipita e scroscia senza sosta: un suono pieno che cancella ogni distrazione.", moods: ["focus", "sleep"], pairs: ["foresta", "vento", "grilli"] },
+  fiume: { desc: "Una corrente gentile che scorre tra i sassi: leggera, viva, mai monotona.", moods: ["relax", "focus"], pairs: ["foresta", "grilli", "vento"] },
+  falo: { desc: "Legna che scoppietta e brace che crepita: il calore di un fuoco acceso, anche in città.", moods: ["relax", "sleep"], pairs: ["grilli", "temporale", "pioggia_dolce"] },
+  vento: { desc: "Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.", moods: ["relax", "focus"], pairs: ["mare", "foresta", "falo"] },
+  grilli: { desc: "Una notte d'estate in campagna, con il canto dei grilli e l'aria tiepida.", moods: ["sleep", "relax"], pairs: ["falo", "fiume", "mare"] },
+  phon: { desc: "Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.", moods: ["sleep", "focus"], pairs: ["pioggia_dolce", "stufa_elettrica", "vento"] },
+};
+
 // `%s` viene sostituito dal dettaglio scritto dall'utente (o da `fallback` se manca).
 const CATEGORIES = [
   { id: "FILM", label: "Film", icon: "🎬", primary: "#EF4444", secondary: "#FFB38A", fallback: "un bel film", example: "Il Signore degli Anelli",

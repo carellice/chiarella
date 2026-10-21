@@ -22,7 +22,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,7 @@ import it.chiarella.app.audio.Sound
 import it.chiarella.app.ui.theme.Palette
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SoundCard(
     sound: Sound,
@@ -70,6 +72,7 @@ fun SoundCard(
     volume: Float,
     onToggle: () -> Unit,
     onVolumeChange: (Float) -> Unit,
+    onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -110,7 +113,16 @@ fun SoundCard(
                 ),
                 shape = shape,
             )
-            .clickable(interactionSource = interaction, indication = null, role = Role.Switch) {
+            .combinedClickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Switch,
+                onLongClickLabel = "Dettagli",
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDetails()
+                },
+            ) {
                 haptic.performHapticFeedback(if (active) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
                 onToggle()
             },

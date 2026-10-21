@@ -7,6 +7,9 @@ public enum Ambience { Rain, Storm, Heat, Waves, Leaves, Fall, Ripple, Embers, W
 
 public sealed record Sound(string Id, string Name, string Tagline, string Icon, Color Primary, Color Secondary, Ambience Ambience);
 
+/// <summary>Dettaglio di un suono: descrizione, momenti ideali (emoji + etichetta) e suoni con cui si abbina.</summary>
+public sealed record SoundInfo(string Description, string[] Moods, string[] Pairs);
+
 public sealed record PassionCategory(
     string Id, string Label, string Icon, Color Primary, Color Secondary,
     string Fallback, string Example, string[] Ideas)
@@ -44,6 +47,25 @@ public static class Catalog
     private static readonly Dictionary<string, Sound> SoundById = Sounds.ToDictionary(s => s.Id);
 
     public static Sound? Sound(string id) => SoundById.GetValueOrDefault(id);
+
+    private const string Sleep = "🌙  Dormire", Focus = "🎯  Concentrarsi", Relax = "🍃  Rilassarsi";
+
+    private static readonly Dictionary<string, SoundInfo> Infos = new()
+    {
+        ["pioggia_dolce"] = new("Una pioggia leggera e regolare su foglie e tetti: copre i rumori di fondo senza mai diventare invadente.", [Sleep, Focus], ["stufa_elettrica", "vento", "falo"]),
+        ["stufa_elettrica"] = new("Il ronzio caldo e costante di una stufa: un rumore bianco morbido, che isola e accompagna.", [Sleep, Focus], ["pioggia_dolce", "vento", "temporale"]),
+        ["temporale"] = new("Tuoni lontani che rotolano sopra la pioggia battente: perfetto per sentirsi al riparo.", [Sleep, Relax], ["pioggia_dolce", "falo", "stufa_elettrica"]),
+        ["mare"] = new("Onde che arrivano e si ritirano sulla riva, con un ritmo lento che invita a respirare.", [Relax, Sleep], ["vento", "grilli", "falo"]),
+        ["foresta"] = new("Foglie mosse dal vento e il canto degli uccelli: una passeggiata nel bosco senza muoversi.", [Focus, Relax], ["fiume", "vento", "cascata"]),
+        ["cascata"] = new("Acqua che precipita e scroscia senza sosta: un suono pieno che cancella ogni distrazione.", [Focus, Sleep], ["foresta", "vento", "grilli"]),
+        ["fiume"] = new("Una corrente gentile che scorre tra i sassi: leggera, viva, mai monotona.", [Relax, Focus], ["foresta", "grilli", "vento"]),
+        ["falo"] = new("Legna che scoppietta e brace che crepita: il calore di un fuoco acceso, anche in città.", [Relax, Sleep], ["grilli", "temporale", "pioggia_dolce"]),
+        ["vento"] = new("Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.", [Relax, Focus], ["mare", "foresta", "falo"]),
+        ["grilli"] = new("Una notte d'estate in campagna, con il canto dei grilli e l'aria tiepida.", [Sleep, Relax], ["falo", "fiume", "mare"]),
+        ["phon"] = new("Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.", [Sleep, Focus], ["pioggia_dolce", "stufa_elettrica", "vento"]),
+    };
+
+    public static SoundInfo Info(string id) => Infos[id];
 
     public static readonly IReadOnlyList<PassionCategory> Categories =
     [

@@ -86,6 +86,7 @@ import it.chiarella.app.ui.components.PresetRow
 import it.chiarella.app.ui.components.RoundIconButton
 import it.chiarella.app.ui.components.SavePresetSheet
 import it.chiarella.app.ui.components.SoundCard
+import it.chiarella.app.ui.components.SoundDetailDialog
 import it.chiarella.app.ui.components.TimerSheet
 import it.chiarella.app.ui.components.UpdateBanner
 import it.chiarella.app.ui.components.UpdateSheet
@@ -112,6 +113,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
     var showTimer by remember { mutableStateOf(false) }
     var showSave by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<Preset?>(null) }
+    var detailId by remember { mutableStateOf<String?>(null) }
 
     // Permesso notifiche (Android 13+): chiesto la prima volta che parte la musica.
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -212,6 +214,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
                     volume = state.volume(sound.id),
                     onToggle = { mixer.toggleSound(sound.id) },
                     onVolumeChange = { mixer.setVolume(sound.id, it) },
+                    onDetails = { detailId = sound.id },
                     modifier = Modifier.introStep(intro.value, 4 + index / 2),
                 )
             }
@@ -234,6 +237,19 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
                 onTimer = { showTimer = true },
             )
         }
+    }
+
+    detailId?.let { Sounds[it] }?.let { sound ->
+        SoundDetailDialog(
+            sound = sound,
+            active = state.isActive(sound.id),
+            playing = state.playing,
+            volume = state.volume(sound.id),
+            isActive = state::isActive,
+            onToggle = mixer::toggleSound,
+            onVolumeChange = { mixer.setVolume(sound.id, it) },
+            onDismiss = { detailId = null },
+        )
     }
 
     if (showUpdate) {

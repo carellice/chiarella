@@ -28,6 +28,7 @@ Dall'[ultima release](https://github.com/carellice/chiarella/releases/latest):
 
 - **11 suoni** in loop continuo, da accendere insieme e mescolare liberamente
 - **Volume per ogni suono**, con slider dedicato, dissolvenze morbide e feedback aptico
+- **Dettaglio del suono**: tieni premuta una card (clic destro su Windows e sul web) e si apre una finestra animata con lo stato del suono (acceso/spento), il volume sempre regolabile, una descrizione, i momenti ideali (dormire, concentrarsi, rilassarsi) e i suoni con cui si abbina bene, da aggiungere con un tocco
 - **Play/Pausa** e **Ferma tutti**
 - **Timer di spegnimento** (rapidi da 15 min a 2 h oppure personalizzato da 5 min a 4 h), con dissolvenza finale di 12 secondi
 - **Profili**: all'installazione sono vuoti; salvi tu il mix corrente con «Salva mix» (tieni premuto per eliminarli). Se tocchi il profilo che sta già suonando, va in pausa

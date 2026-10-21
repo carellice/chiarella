@@ -133,6 +133,28 @@
   </section>
 
   <!-- Finestre -->
+  <dialog id="dlg-sound" class="sound-dialog" aria-labelledby="sd-name">
+    <div class="sd-head">
+      <canvas id="sd-canvas"></canvas>
+      <button class="round sd-close" data-close aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg></button>
+      <div class="sd-icon"><i></i><i></i><i></i><span id="sd-icon"></span></div>
+      <div class="sd-title"><h3 id="sd-name"></h3><span class="sd-pill" id="sd-pill"><span class="eq" id="sd-eq"><i></i><i></i><i></i><i></i></span><span id="sd-state">Spento</span></span></div>
+    </div>
+    <div class="sd-body">
+      <div class="sd-volume sd-step" id="sd-volume">
+        <div class="row"><span class="sd-label">Volume</span><strong id="sd-volume-label">70%</strong></div>
+        <input type="range" id="sd-range" min="0" max="1" step="0.01" aria-label="Volume" />
+        <small id="sd-volume-hint">Il suono è spento: partirà con questo volume.</small>
+      </div>
+      <p class="muted sd-step" id="sd-desc"></p>
+      <span class="sd-label sd-step">Ideale per</span>
+      <div class="sd-moods sd-step" id="sd-moods"></div>
+      <span class="sd-label sd-step">Si abbina bene con</span>
+      <div class="sd-pairs sd-step" id="sd-pairs"></div>
+      <button class="gradient wide sd-toggle sd-step" id="sd-toggle">Accendi</button>
+    </div>
+  </dialog>
+
   <dialog id="dlg-timer">
     <h3>Timer di spegnimento</h3>
     <p class="muted">Allo scadere i suoni sfumano dolcemente fino al silenzio.</p>
@@ -170,6 +192,7 @@
     <ul class="help">
       <li><b>Accendi e mescola</b> — tocca una card per accendere un suono, toccala di nuovo per spegnerlo. Puoi accenderne quanti vuoi insieme.</li>
       <li><b>Regola il volume</b> — ogni suono acceso ha il suo cursore.</li>
+      <li><b>Dettaglio del suono</b> — clic destro (o pressione lunga sul telefono) su una card: descrizione, momenti ideali e suoni da abbinare.</li>
       <li><b>Profili</b> — salva il mix corrente con «Salva mix» e ritrovalo con un tocco. Tieni premuto (o clic destro) per eliminarlo.</li>
       <li><b>Timer</b> — dalla barra in basso: allo scadere i suoni sfumano fino al silenzio.</li>
       <li><b>Un momento per te</b> — scegli le tue passioni: dopo un breve respiro guidato ti propongo cosa fare per rilassarti.</li>

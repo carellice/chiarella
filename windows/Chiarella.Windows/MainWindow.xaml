@@ -137,5 +137,8 @@
 
         <!-- Un momento per te -->
         <ui:RelaxView x:Name="Relax" Margin="0,40,0,0" Visibility="Collapsed" />
+
+        <!-- Dettaglio di un suono (clic destro sulla card) -->
+        <ui:SoundDetailView x:Name="Detail" Margin="0,40,0,0" />
     </Grid>
 </Window>

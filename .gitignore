@@ -23,3 +23,4 @@ anteprime-giunture/
 __pycache__/
 *.pyc
 .venv/
+/.claude

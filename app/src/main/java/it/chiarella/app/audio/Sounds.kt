@@ -65,3 +65,64 @@ object Sounds {
 
     operator fun get(id: String): Sound? = byId[id]
 }
+
+/** A cosa si presta un suono: mostrato come etichetta nel dettaglio. */
+enum class Mood(val label: String, val emoji: String) {
+    SLEEP("Dormire", "🌙"),
+    FOCUS("Concentrarsi", "🎯"),
+    RELAX("Rilassarsi", "🍃"),
+}
+
+/** Dettaglio di un suono: descrizione, momenti ideali e suoni con cui si abbina bene. */
+data class SoundInfo(val description: String, val moods: List<Mood>, val pairs: List<String>)
+
+object SoundInfos {
+    private val byId = mapOf(
+        "pioggia_dolce" to SoundInfo(
+            "Una pioggia leggera e regolare su foglie e tetti: copre i rumori di fondo senza mai diventare invadente.",
+            listOf(Mood.SLEEP, Mood.FOCUS), listOf("stufa_elettrica", "vento", "falo"),
+        ),
+        "stufa_elettrica" to SoundInfo(
+            "Il ronzio caldo e costante di una stufa: un rumore bianco morbido, che isola e accompagna.",
+            listOf(Mood.SLEEP, Mood.FOCUS), listOf("pioggia_dolce", "vento", "temporale"),
+        ),
+        "temporale" to SoundInfo(
+            "Tuoni lontani che rotolano sopra la pioggia battente: perfetto per sentirsi al riparo.",
+            listOf(Mood.SLEEP, Mood.RELAX), listOf("pioggia_dolce", "falo", "stufa_elettrica"),
+        ),
+        "mare" to SoundInfo(
+            "Onde che arrivano e si ritirano sulla riva, con un ritmo lento che invita a respirare.",
+            listOf(Mood.RELAX, Mood.SLEEP), listOf("vento", "grilli", "falo"),
+        ),
+        "foresta" to SoundInfo(
+            "Foglie mosse dal vento e il canto degli uccelli: una passeggiata nel bosco senza muoversi.",
+            listOf(Mood.FOCUS, Mood.RELAX), listOf("fiume", "vento", "cascata"),
+        ),
+        "cascata" to SoundInfo(
+            "Acqua che precipita e scroscia senza sosta: un suono pieno che cancella ogni distrazione.",
+            listOf(Mood.FOCUS, Mood.SLEEP), listOf("foresta", "vento", "grilli"),
+        ),
+        "fiume" to SoundInfo(
+            "Una corrente gentile che scorre tra i sassi: leggera, viva, mai monotona.",
+            listOf(Mood.RELAX, Mood.FOCUS), listOf("foresta", "grilli", "vento"),
+        ),
+        "falo" to SoundInfo(
+            "Legna che scoppietta e brace che crepita: il calore di un fuoco acceso, anche in città.",
+            listOf(Mood.RELAX, Mood.SLEEP), listOf("grilli", "temporale", "pioggia_dolce"),
+        ),
+        "vento" to SoundInfo(
+            "Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.",
+            listOf(Mood.RELAX, Mood.FOCUS), listOf("mare", "foresta", "falo"),
+        ),
+        "grilli" to SoundInfo(
+            "Una notte d'estate in campagna, con il canto dei grilli e l'aria tiepida.",
+            listOf(Mood.SLEEP, Mood.RELAX), listOf("falo", "fiume", "mare"),
+        ),
+        "phon" to SoundInfo(
+            "Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.",
+            listOf(Mood.SLEEP, Mood.FOCUS), listOf("pioggia_dolce", "stufa_elettrica", "vento"),
+        ),
+    )
+
+    operator fun get(id: String): SoundInfo = byId.getValue(id)
+}

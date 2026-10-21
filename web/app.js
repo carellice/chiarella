@@ -327,7 +327,19 @@ function buildGrid() {
     range.addEventListener("input", () => setVolume(s.id, Number(range.value)));
     range.addEventListener("click", (e) => e.stopPropagation());
     range.addEventListener("keydown", (e) => e.stopPropagation());
-    card.addEventListener("click", () => toggleSound(s.id));
+    card.addEventListener("click", () => {
+      if (detail.suppressClick) { detail.suppressClick = false; return; }
+      toggleSound(s.id);
+    });
+    // Dettaglio: clic destro (o il tasto Menu), oppure pressione lunga sugli schermi touch.
+    card.addEventListener("contextmenu", (e) => { e.preventDefault(); openSoundDetail(s.id, card); });
+    card.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch" || e.target.closest(".vol")) return;
+      clearTimeout(detail.pressTimer);
+      detail.pressTimer = setTimeout(() => { detail.suppressClick = true; openSoundDetail(s.id, card); }, 550);
+    });
+    ["pointerup", "pointercancel", "pointerleave", "pointermove"].forEach((t) =>
+      card.addEventListener(t, (e) => { if (t !== "pointermove" || Math.abs(e.movementY) > 4) clearTimeout(detail.pressTimer); }));
     card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSound(s.id); } });
     grid.appendChild(card);
   });
@@ -354,6 +366,7 @@ function render() {
   renderPlayer();
   renderPresets();
   renderTimerDialog();
+  renderSoundDetail();
   updateMediaSession();
 }
 
@@ -577,14 +590,14 @@ function glow(g, color, x, y, r, a) {
 // Scene animate dentro le card dei suoni accesi.
 const particles = Array.from({ length: 30 }, () => ({ x: Math.random(), y: Math.random(), size: Math.random(), speed: 0.5 + Math.random(), phase: Math.random() * 6.28 }));
 
-function drawAmbience(canvas, sound, t) {
+function drawAmbience(canvas, sound, t, intensity = null) {
   const r = canvas.getBoundingClientRect();
   const dpr = Math.min(devicePixelRatio || 1, 2);
   if (canvas.width !== Math.round(r.width * dpr)) { canvas.width = r.width * dpr; canvas.height = r.height * dpr; }
   const g = canvas.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   const w = r.width, h = r.height, sec = t / 1000;
-  const a = state.playing ? 1 : 0.35;
+  const a = intensity ?? (state.playing ? 1 : 0.35);
   const p = hexToRgb(sound.primary), q = hexToRgb(sound.secondary);
   g.clearRect(0, 0, w, h);
   g.lineCap = "round";
@@ -686,6 +699,7 @@ function frame(t) {
   drawAurora(t);
   document.querySelectorAll(".card.on canvas").forEach((cv) => drawAmbience(cv, soundById[cv.parentElement.dataset.id], t));
   if (!$("#step-breathe").hidden) drawFlower(t);
+  if (detail.id) drawAmbience($("#sd-canvas"), soundById[detail.id], t, detailIntensity());
   requestAnimationFrame(frame);
 }
 
@@ -877,6 +891,84 @@ $("#btn-done").addEventListener("click", closeRelax);
 $("#btn-another").addEventListener("click", pick);
 $("#btn-again").addEventListener("click", () => showStep("breathe"));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#relax").hidden && !document.querySelector("dialog[open]")) closeRelax(); });
+
+// ------------------------------------------------------------------ dettaglio del suono
+
+const detail = { id: null, pressTimer: 0, suppressClick: false };
+
+function detailIntensity() {
+  const live = state.active.has(detail.id) && state.playing;
+  return live ? 0.55 + 0.45 * volumeOf(detail.id) : 0.45;
+}
+
+function openSoundDetail(id, card) {
+  const dlg = $("#dlg-sound");
+  if (dlg.open) return;
+  const s = soundById[id], info = SOUND_INFO[id];
+  detail.id = id;
+  // La finestra parte dalla posizione della card, così sembra uscire da lì.
+  const r = card.getBoundingClientRect();
+  dlg.style.cssText = `--p:${s.primary};--s:${s.secondary};--from-x:${Math.round(r.left + r.width / 2 - innerWidth / 2)}px;--from-y:${Math.round(r.top + r.height / 2 - innerHeight / 2)}px`;
+  $("#sd-icon").textContent = s.icon;
+  $("#sd-name").textContent = s.name;
+  $("#sd-desc").textContent = info.desc;
+  $("#sd-moods").innerHTML = info.moods.map((m) => `<span>${MOODS[m]}</span>`).join("");
+  renderSoundDetail();
+  if (navigator.vibrate) navigator.vibrate(12);
+  dlg.showModal();
+}
+
+function renderSoundDetail() {
+  if (!detail.id) return;
+  const s = soundById[detail.id], info = SOUND_INFO[detail.id];
+  const on = state.active.has(detail.id);
+  // Stato ben visibile: acceso (con equalizzatore) o spento.
+  const live = on && state.playing;
+  const label = live ? "Acceso · in riproduzione" : on ? "Acceso · in pausa" : "Spento";
+  if ($("#sd-state").textContent !== label) $("#sd-state").textContent = label;
+  $("#sd-pill").classList.toggle("on", on);
+  $("#sd-eq").hidden = !on;
+  $("#sd-eq").classList.toggle("on", live);
+  $("#sd-pairs").innerHTML = info.pairs.map((pid) => {
+    const p = soundById[pid], pon = state.active.has(pid);
+    return `<button class="${pon ? "on" : ""}" data-pair="${pid}" style="--p:${p.primary};--s:${p.secondary}">
+      <span class="badge">${p.icon}</span><strong>${p.name}</strong><small>${pon ? "Acceso" : "Aggiungi"}</small></button>`;
+  }).join("");
+  // Il volume resta sempre regolabile: a suono spento sarà quello con cui ripartirà.
+  $("#sd-volume-hint").hidden = on;
+  $("#sd-range").value = volumeOf(detail.id);
+  $("#sd-volume-label").textContent = Math.round(volumeOf(detail.id) * 100) + "%";
+  const toggle = $("#sd-toggle");
+  toggle.textContent = (on ? "Spegni " : "Accendi ") + s.name.toLowerCase();
+  toggle.classList.toggle("on", on);
+}
+
+function closeSoundDetail() {
+  const dlg = $("#dlg-sound");
+  if (!dlg.open || dlg.classList.contains("closing")) return;
+  dlg.classList.add("closing");
+  setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); detail.id = null; }, 250);
+}
+
+(function bindSoundDetail() {
+  const dlg = $("#dlg-sound");
+  // Chiusura animata: con la X, con Esc o toccando fuori dalla finestra.
+  dlg.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close]") || e.target === dlg) { e.stopPropagation(); closeSoundDetail(); }
+  }, true);
+  dlg.addEventListener("cancel", (e) => { e.preventDefault(); closeSoundDetail(); });
+  $("#sd-pairs").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pair]");
+    if (b) toggleSound(b.dataset.pair);
+  });
+  $("#sd-toggle").addEventListener("click", () => toggleSound(detail.id));
+  $("#sd-range").addEventListener("input", (e) => {
+    setVolume(detail.id, Number(e.target.value));
+    $("#sd-volume-label").textContent = Math.round(Number(e.target.value) * 100) + "%";
+    const cardRange = document.querySelector(`.card[data-id="${detail.id}"] .vol`);
+    if (cardRange) cardRange.value = e.target.value;
+  });
+})();
 
 // ------------------------------------------------------------------ avvio
 
