@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.glance.appwidget.updateAll
 import it.chiarella.app.audio.Mixer
 import it.chiarella.app.data.Store
+import it.chiarella.app.update.Updater
 import it.chiarella.app.widget.ChiarellaWidget
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.MainScope
@@ -20,6 +21,8 @@ class ChiarellaApp : Application() {
         private set
     lateinit var mixer: Mixer
         private set
+    lateinit var updater: Updater
+        private set
 
     private val scope = MainScope()
 
@@ -28,6 +31,7 @@ class ChiarellaApp : Application() {
         super.onCreate()
         store = Store(this)
         mixer = Mixer(this, store)
+        updater = Updater(this)
 
         // Tiene il widget allineato con lo stato della riproduzione e con i profili.
         scope.launch {

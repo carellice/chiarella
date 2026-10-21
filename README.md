@@ -16,6 +16,11 @@
   <a href="LICENSE"><img alt="Licenza MIT" src="https://img.shields.io/badge/licenza-MIT-lightgrey" /></a>
 </p>
 
+## Scaricare l'app
+
+Scarica l'APK dall'[ultima release](https://github.com/carellice/chiarella/releases/latest) e installalo
+(Android 8.0 o successivo). Gli aggiornamenti successivi arrivano direttamente dall'app.
+
 ## Funzioni
 
 - **11 suoni** in loop continuo, da accendere insieme e mescolare liberamente
@@ -26,6 +31,7 @@
 - **Guida introduttiva** animata al primo avvio (8 schermate), rivedibile dal pulsante «?» in alto
 - **Notifica "Live Update"**: su Android 16 appare come chip nella barra di stato, con il conto alla rovescia del timer e una barra di avanzamento. Dalla notifica puoi mettere in pausa o riprendere, allungare il timer (+15 min) e fermare tutto
 - **Widget** per la home: play/pausa e, se lo allarghi, i primi 3 profili
+- **Aggiornamenti dall'app**: Chiarella controlla le release di GitHub, mostra le novità, scarica il nuovo APK e avvia l'installazione
 - Pausa automatica durante le chiamate (poi riprende da sola) e quando scolleghi le cuffie
 - Animazioni: sfondo "aurora" che prende i colori dei suoni attivi, scene animate dentro ogni card (pioggia, onde, braci, lucciole…), ingresso a cascata, splash con il logo bianco
 
@@ -77,6 +83,22 @@ Oppure apri la cartella con Android Studio e premi Run.
 > La build release è firmata con la chiave di debug, così si installa subito.
 > Per pubblicarla sul Play Store va configurata una chiave di firma tua.
 
+## Pubblicare una nuova versione
+
+Fai doppio clic su **`release.bat`** (serve la [GitHub CLI](https://cli.github.com/) collegata con `gh auth login`). Lo script:
+
+1. alza la versione (es. 1.5 → 1.6) in `app/build.gradle.kts`;
+2. compila l'APK firmato;
+3. fa commit, tag `v1.6` e push;
+4. crea la release su GitHub con l'APK allegato e le note di rilascio
+   (te le chiede; premendo Invio usa l'elenco dei commit dall'ultima release).
+
+Opzioni: `release.bat -Version 2.0` per scegliere la versione, `release.bat -Notes "Novità…"` per le note.
+
+> **Importante:** Android installa un aggiornamento solo se è firmato con la stessa chiave della versione installata.
+> Le release sono firmate con la chiave di questo PC (`%USERPROFILE%\.android\debug.keystore`):
+> **conservane una copia di backup**, altrimenti le versioni future non potranno aggiornare l'app già installata.
+
 ## Struttura
 
 ```
@@ -86,6 +108,7 @@ app/src/main/java/it/chiarella/app/
 ├── audio/Mixer.kt            Motore: un player ExoPlayer in loop per suono, fade, timer, audio focus
 ├── data/Store.kt             Profili, volumi, ultimo mix (SharedPreferences)
 ├── playback/PlaybackService  Servizio in primo piano + notifica Live Update
+├── update/Updater.kt         Aggiornamenti dalle release di GitHub
 ├── widget/ChiarellaWidget.kt    Widget (Jetpack Glance)
 └── ui/                       Schermata principale e componenti animati (Compose)
 ```

@@ -43,6 +43,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -75,16 +76,28 @@ import it.chiarella.app.ui.components.RoundIconButton
 import it.chiarella.app.ui.components.SavePresetSheet
 import it.chiarella.app.ui.components.SoundCard
 import it.chiarella.app.ui.components.TimerSheet
+import it.chiarella.app.ui.components.UpdateBanner
+import it.chiarella.app.ui.components.UpdateSheet
+import it.chiarella.app.update.UpdateState
+import it.chiarella.app.update.Updater
 import it.chiarella.app.ui.components.bleed
 import it.chiarella.app.ui.theme.Palette
 import java.util.Calendar
 
 @Composable
-fun HomeScreen(mixer: Mixer, store: Store, onShowGuide: () -> Unit) {
+fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> Unit) {
     val context = LocalContext.current
     val state by mixer.state.collectAsStateWithLifecycle()
     val presets by store.presets.collectAsStateWithLifecycle()
 
+    val update by updater.state.collectAsStateWithLifecycle()
+    var showUpdate by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { updater.checkIfDue() }
+    val showBanner = when (val u = update) {
+        is UpdateState.Available -> !updater.isDismissed(u.release)
+        is UpdateState.Downloading, is UpdateState.ReadyToInstall -> true
+        else -> false
+    }
     var showTimer by remember { mutableStateOf(false) }
     var showSave by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<Preset?>(null) }
@@ -127,7 +140,26 @@ fun HomeScreen(mixer: Mixer, store: Store, onShowGuide: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "header") {
-                Header(state, onShowGuide, Modifier.introStep(intro.value, 0))
+                Header(
+                    state, onShowGuide,
+                    onShowUpdates = {
+                        if (update !is UpdateState.Available && update !is UpdateState.Downloading &&
+                            update !is UpdateState.ReadyToInstall
+                        ) updater.checkNow()
+                        showUpdate = true
+                    },
+                    modifier = Modifier.introStep(intro.value, 0),
+                )
+            }
+            if (showBanner) {
+                item(span = { GridItemSpan(maxLineSpan) }, key = "update") {
+                    UpdateBanner(
+                        update,
+                        onOpen = { showUpdate = true },
+                        onDismiss = updater::dismiss,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
             }
             item(span = { GridItemSpan(maxLineSpan) }, key = "presetsTitle") {
                 SectionTitle(
@@ -190,6 +222,10 @@ fun HomeScreen(mixer: Mixer, store: Store, onShowGuide: () -> Unit) {
         }
     }
 
+    if (showUpdate) {
+        UpdateSheet(updater, update, onDismiss = { showUpdate = false })
+    }
+
     if (showTimer) {
         TimerSheet(
             state = state,
@@ -235,7 +271,12 @@ fun HomeScreen(mixer: Mixer, store: Store, onShowGuide: () -> Unit) {
 }
 
 @Composable
-private fun Header(state: Mixer.State, onShowGuide: () -> Unit, modifier: Modifier = Modifier) {
+private fun Header(
+    state: Mixer.State,
+    onShowGuide: () -> Unit,
+    onShowUpdates: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val greeting = remember {
         when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
             in 5..11 -> "Buongiorno"
@@ -248,6 +289,8 @@ private fun Header(state: Mixer.State, onShowGuide: () -> Unit, modifier: Modifi
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(greeting.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.TextMuted)
             Spacer(Modifier.weight(1f))
+            RoundIconButton(Icons.Rounded.SystemUpdate, "Aggiornamenti", 38.dp, onShowUpdates)
+            Spacer(Modifier.width(8.dp))
             RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, "Come funziona", 38.dp, onShowGuide)
         }
         Spacer(Modifier.height(2.dp))

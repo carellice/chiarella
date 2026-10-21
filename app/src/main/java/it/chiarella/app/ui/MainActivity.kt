@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
                             showGuide = false
                         })
                     } else {
-                        HomeScreen(mixer = app.mixer, store = app.store, onShowGuide = { showGuide = true })
+                        HomeScreen(mixer = app.mixer, store = app.store, updater = app.updater, onShowGuide = { showGuide = true })
                     }
                 }
             }

@@ -4,3 +4,4 @@
 *.webp binary
 *.ogg binary
 *.jar binary
+*.ps1 text eol=crlf
