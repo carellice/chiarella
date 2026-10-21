@@ -1,6 +1,20 @@
-# Chiarella — suoni rilassanti per Android
+<p align="center">
+  <img src="branding/chiarella_icon_512.png" alt="Icona di Chiarella" width="160" style="border-radius: 36px;" />
+</p>
 
-App nativa Android (Kotlin + Jetpack Compose) per mescolare suoni rilassanti.
+<h1 align="center">Chiarella</h1>
+
+<p align="center">
+  Suoni della natura da mescolare per rilassarti, concentrarti e dormire.<br/>
+  App nativa Android, open source.
+</p>
+
+<p align="center">
+  <a href="https://github.com/carellice/chiarella/releases/latest"><img alt="Ultima versione" src="https://img.shields.io/github/v/release/carellice/chiarella?label=scarica&color=134447" /></a>
+  <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-749878" />
+  <img alt="Kotlin e Jetpack Compose" src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-8B7CF6" />
+  <a href="LICENSE"><img alt="Licenza MIT" src="https://img.shields.io/badge/licenza-MIT-lightgrey" /></a>
+</p>
 
 ## Funzioni
 
