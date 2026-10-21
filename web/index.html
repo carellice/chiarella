@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080B19" />
+  <meta name="description" content="Suoni della natura da mescolare per rilassarti, concentrarti e dormire." />
+  <title>Chiarella</title>
+  <link rel="icon" type="image/png" href="icon-512.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="aurora" aria-hidden="true"></canvas>
+
+  <!-- Home -->
+  <main id="home" class="screen">
+    <header class="header intro" style="--step:0">
+      <div class="header-top">
+        <span class="overline" id="greeting">Buonasera</span>
+        <button class="round" id="btn-help" title="Come funziona" aria-label="Come funziona">
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-5h2v2h-2v-2Zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3.2 1.6c-.9.7-2.2 1.6-2.2 3.4h2c0-1 .7-1.5 1.4-2A4 4 0 0 0 12 5Z"/></svg>
+        </button>
+      </div>
+      <h1>Trova la tua quiete</h1>
+      <p class="status" id="status"><span class="eq" id="status-eq"><i></i><i></i><i></i><i></i></span><span id="status-text">Accendi uno o più suoni e mescolali come preferisci.</span></p>
+    </header>
+
+    <button class="relax-card intro" style="--step:1" id="btn-relax">
+      <span class="relax-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.2"/><path d="M21 16v-2c-2.2 0-4.2-.9-5.6-2.4l-1.3-1.4a2 2 0 0 0-1.5-.7h-1.2c-.6 0-1.1.3-1.5.7L8.6 11.6A7.6 7.6 0 0 1 3 14v2c2.8 0 5.3-1.1 7-2.9v2.3l-4 1.6V21h2v-2.6l3.2-1.3L14 18.4V21h2v-3.9l-4-1.6v-2.4c1.7 1.8 4.2 2.9 7 2.9Z"/></svg></span>
+      <span class="relax-text"><strong>Un momento per te</strong><small>Respira un minuto, poi ti dico cosa fare per rilassarti</small></span>
+      <svg class="arrow" viewBox="0 0 24 24"><path d="M12 4l-1.4 1.4 5.6 5.6H4v2h12.2l-5.6 5.6L12 20l8-8z"/></svg>
+    </button>
+
+    <section class="intro" style="--step:2">
+      <div class="section-title"><h2>Profili</h2><span class="hint" id="presets-hint">I tuoi mix preferiti</span></div>
+      <div class="presets" id="presets"></div>
+    </section>
+
+    <section class="intro" style="--step:3">
+      <div class="section-title"><h2>Suoni</h2><button class="hint action" id="sounds-hint">Tocca per accendere</button></div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+
+  <!-- Barra del player -->
+  <div class="player" id="player" hidden>
+    <div class="player-stack" id="player-stack"></div>
+    <div class="player-info">
+      <strong id="player-title">Il tuo mix</strong>
+      <small id="player-sub">In riproduzione</small>
+    </div>
+    <button class="round" id="btn-timer" title="Timer" aria-label="Timer">
+      <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1Zm-4 13h2V8h-2v6Zm8-6.6 1.4-1.4c-.4-.5-.9-1-1.4-1.4L17.6 6A9 9 0 1 0 21 13a9 9 0 0 0-2-5.6ZM12 20a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg>
+      <span class="timer-badge" id="timer-badge" hidden></span>
+    </button>
+    <button class="play" id="btn-play" aria-label="Riproduci o metti in pausa">
+      <svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="round" id="btn-stop" title="Ferma tutti" aria-label="Ferma tutti">
+      <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+    </button>
+  </div>
+
+  <!-- Un momento per te -->
+  <section id="relax" class="screen overlay" hidden>
+    <div class="relax-top">
+      <button class="round" id="relax-close" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg></button>
+      <button class="round" id="relax-edit" aria-label="Le mie passioni"><svg viewBox="0 0 24 24"><path d="M3 17.2V21h3.8l11-11-3.8-3.8-11 11ZM20.7 7c.4-.4.4-1 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8L20.7 7Z"/></svg></button>
+    </div>
+
+    <div class="relax-step" id="step-passions" hidden>
+      <div class="scroll">
+        <span class="overline">Un momento per te</span>
+        <h1>Le tue passioni</h1>
+        <p class="muted">Dimmi cosa ti piace fare. Quando vorrai rilassarti, dopo un breve respiro guidato, ti proporrò io qualcosa tra queste.</p>
+        <div class="chips" id="chips"></div>
+        <form class="detail" id="detail-form" hidden>
+          <strong id="detail-title">Film</strong>
+          <small>Facoltativo: scrivi cosa in particolare, così le proposte saranno più tue.</small>
+          <input id="detail-input" maxlength="40" autocomplete="off" />
+          <button class="gradient" type="submit">Aggiungi</button>
+        </form>
+        <h3 id="passions-title">Nessuna passione, per ora</h3>
+        <ul class="passions" id="passions"></ul>
+      </div>
+      <button class="gradient wide" id="btn-start-breath" disabled>Aggiungi almeno una passione</button>
+    </div>
+
+    <div class="relax-step center" id="step-breathe" hidden>
+      <span class="overline">Respira con me</span>
+      <h2 class="big">Prima di tutto, un minuto per te</h2>
+      <div class="flower-wrap">
+        <canvas id="flower"></canvas>
+        <div class="phase" id="phase"><strong>Mettiti comodo</strong><small>e chiudi gli occhi, se vuoi</small></div>
+      </div>
+      <div class="count" id="count">3</div>
+      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+      <button class="link" id="btn-skip">Salta</button>
+    </div>
+
+    <div class="relax-step center" id="step-reveal" hidden>
+      <span class="overline">Ben fatto, ora va meglio</span>
+      <h2 class="big">Ecco cosa ti propongo</h2>
+      <div class="reveal">
+        <div class="halo" id="halo"></div>
+        <div class="badge xl" id="reveal-badge"></div>
+        <h2 id="reveal-title"></h2>
+        <p class="muted idea" id="reveal-idea"></p>
+      </div>
+      <div class="reveal-actions" id="reveal-actions">
+        <button class="gradient wide" id="btn-done">Perfetto, lo faccio</button>
+        <div class="row">
+          <button class="secondary" id="btn-another">↻ Un'altra idea</button>
+          <button class="secondary" id="btn-again">Respira ancora</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Finestre -->
+  <dialog id="dlg-timer">
+    <h3>Timer di spegnimento</h3>
+    <p class="muted">Allo scadere i suoni sfumano dolcemente fino al silenzio.</p>
+    <div id="timer-off">
+      <div class="timer-chips" id="timer-chips"></div>
+      <div class="custom">
+        <div class="row"><span class="muted">Personalizzato</span><strong id="custom-label">30 min</strong></div>
+        <input type="range" id="custom-range" min="5" max="240" step="5" value="30" />
+        <button class="gradient wide" id="btn-custom">Avvia timer</button>
+      </div>
+    </div>
+    <div id="timer-on" hidden>
+      <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" class="track"/><circle cx="50" cy="50" r="45" class="progress" id="ring-progress"/></svg>
+        <div><strong id="ring-time">00:00</strong><small id="ring-end"></small></div></div>
+      <div class="timer-chips">
+        <button data-extend="15">+15 min</button><button data-extend="30">+30 min</button><button class="danger" id="btn-cancel-timer">Annulla</button>
+      </div>
+    </div>
+    <button class="link close" data-close>Chiudi</button>
+  </dialog>
+
+  <dialog id="dlg-save">
+    <h3>Salva come profilo</h3>
+    <p class="muted">Ritrovi questo mix, con i suoi volumi, con un solo tocco.</p>
+    <form id="save-form">
+      <input id="save-name" maxlength="32" required />
+      <div id="save-preview"></div>
+      <button class="gradient wide" type="submit">Salva profilo</button>
+    </form>
+    <button class="link close" data-close>Annulla</button>
+  </dialog>
+
+  <dialog id="dlg-help">
+    <h3>Come funziona</h3>
+    <ul class="help">
+      <li><b>Accendi e mescola</b> — tocca una card per accendere un suono, toccala di nuovo per spegnerlo. Puoi accenderne quanti vuoi insieme.</li>
+      <li><b>Regola il volume</b> — ogni suono acceso ha il suo cursore.</li>
+      <li><b>Profili</b> — salva il mix corrente con «Salva mix» e ritrovalo con un tocco. Tieni premuto (o clic destro) per eliminarlo.</li>
+      <li><b>Timer</b> — dalla barra in basso: allo scadere i suoni sfumano fino al silenzio.</li>
+      <li><b>Un momento per te</b> — scegli le tue passioni: dopo un breve respiro guidato ti propongo cosa fare per rilassarti.</li>
+      <li><b>Tastiera</b> — <kbd>Spazio</kbd> riproduce o mette in pausa.</li>
+    </ul>
+    <button class="gradient wide" data-close>Ho capito</button>
+  </dialog>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

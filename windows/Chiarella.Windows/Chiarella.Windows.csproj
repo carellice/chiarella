@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Chiarella</RootNamespace>
+    <AssemblyName>Chiarella</AssemblyName>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <!-- App non pacchettizzata e autonoma: basta estrarre lo zip e avviare Chiarella.exe. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\chiarella.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.6</Version>
+    <Product>Chiarella</Product>
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Solo i componenti che servono (il metapacchetto aggiungerebbe ~150 MB di AI/ML). -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.9" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Foundation" Version="2.3.12" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\chiarella.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- I suoni sono gli stessi dell'app Android: nessuna copia nel repository. -->
+    <Content Include="..\..\app\src\main\res\raw\*.ogg" Link="Sounds\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Il publish di un'app WinUI non pacchettizzata dimentica le risorse compilate dell'app: senza, l'avvio fallisce. -->
+  <Target Name="CopyAppResources" AfterTargets="Publish">
+    <ItemGroup>
+      <AppResources Include="$(OutDir)$(AssemblyName).pri;$(OutDir)*.xbf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppResources)" DestinationFolder="$(PublishDir)" />
+  </Target>
+</Project>

@@ -6,6 +6,11 @@ local.properties
 *.apk
 dist/
 
+# App Windows
+windows/**/bin/
+windows/**/obj/
+.vs/
+
 # IDE
 .idea/
 *.iml

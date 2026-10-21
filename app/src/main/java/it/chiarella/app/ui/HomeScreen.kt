@@ -19,6 +19,17 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.SelfImprovement
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +96,7 @@ import it.chiarella.app.ui.theme.Palette
 import java.util.Calendar
 
 @Composable
-fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> Unit) {
+fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> Unit, onRelax: () -> Unit) {
     val context = LocalContext.current
     val state by mixer.state.collectAsStateWithLifecycle()
     val presets by store.presets.collectAsStateWithLifecycle()
@@ -150,6 +161,9 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
                     },
                     modifier = Modifier.introStep(intro.value, 0),
                 )
+            }
+            item(span = { GridItemSpan(maxLineSpan) }, key = "relax") {
+                RelaxCard(onRelax, Modifier.introStep(intro.value, 1))
             }
             if (showBanner) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "update") {
@@ -358,6 +372,53 @@ private fun SectionTitle(
                     .padding(horizontal = 10.dp, vertical = 6.dp),
             )
         }
+    }
+}
+
+/** Invito a "Un momento per te": respiro guidato e poi una proposta tra le passioni dell'utente. */
+@Composable
+private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "relaxCard")
+    val glow by transition.animateFloat(
+        initialValue = 0.6f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4000), RepeatMode.Reverse),
+        label = "relaxGlow",
+    )
+    val shape = RoundedCornerShape(26.dp)
+    Row(
+        modifier
+            .padding(top = 6.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    listOf(Palette.Lavender.copy(alpha = 0.30f * glow), Palette.Sky.copy(alpha = 0.16f * glow), Color.White.copy(alpha = 0.04f))
+                )
+            )
+            .border(1.dp, Palette.GlassBorder, shape)
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.SelfImprovement, null, tint = Color.White, modifier = Modifier.size(26.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Un momento per te", style = MaterialTheme.typography.titleMedium, color = Palette.Text)
+            Text(
+                "Respira un minuto, poi ti dico cosa fare per rilassarti",
+                style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted,
+            )
+        }
+        Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, tint = Palette.TextMuted, modifier = Modifier.size(20.dp))
     }
 }
 

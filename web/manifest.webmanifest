@@ -1,0 +1,11 @@
+{
+  "name": "Chiarella",
+  "short_name": "Chiarella",
+  "description": "Suoni della natura da mescolare per rilassarti, concentrarti e dormire.",
+  "lang": "it",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#080B19",
+  "theme_color": "#080B19",
+  "icons": [{ "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+}

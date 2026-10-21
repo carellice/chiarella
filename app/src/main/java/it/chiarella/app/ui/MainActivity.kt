@@ -55,25 +55,31 @@ class MainActivity : ComponentActivity() {
         val app = application as ChiarellaApp
         setContent {
             ChiarellaTheme {
-                var showGuide by rememberSaveable { mutableStateOf(!app.store.onboardingDone) }
+                var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
                 AnimatedContent(
-                    targetState = showGuide,
+                    targetState = screen,
                     transitionSpec = {
                         (fadeIn(tween(600, delayMillis = 150)) + scaleIn(tween(600, delayMillis = 150), initialScale = 0.96f)) togetherWith
                             (fadeOut(tween(350)) + scaleOut(tween(350), targetScale = 1.04f))
                     },
-                    label = "guide",
-                ) { guide ->
-                    if (guide) {
-                        OnboardingScreen(onFinish = {
+                    label = "screen",
+                ) { current ->
+                    when (current) {
+                        Screen.GUIDE -> OnboardingScreen(onFinish = {
                             app.store.onboardingDone = true
-                            showGuide = false
+                            screen = Screen.HOME
                         })
-                    } else {
-                        HomeScreen(mixer = app.mixer, store = app.store, updater = app.updater, onShowGuide = { showGuide = true })
+                        Screen.RELAX -> RelaxScreen(store = app.store, onClose = { screen = Screen.HOME })
+                        Screen.HOME -> HomeScreen(
+                            mixer = app.mixer, store = app.store, updater = app.updater,
+                            onShowGuide = { screen = Screen.GUIDE },
+                            onRelax = { screen = Screen.RELAX },
+                        )
                     }
                 }
             }
         }
     }
 }
+
+private enum class Screen { HOME, GUIDE, RELAX }

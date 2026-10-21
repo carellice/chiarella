@@ -37,6 +37,26 @@ class Store(context: Context) {
 
     fun preset(id: String): Preset? = _presets.value.firstOrNull { it.id == id }
 
+    private val _passions = MutableStateFlow(loadPassions())
+    val passions: StateFlow<List<Passion>> = _passions.asStateFlow()
+
+    fun addPassion(category: PassionCategory, detail: String): Passion {
+        val passion = Passion(UUID.randomUUID().toString(), category, detail.trim())
+        _passions.value = _passions.value + passion
+        savePassions()
+        return passion
+    }
+
+    fun deletePassion(id: String) {
+        _passions.value = _passions.value.filterNot { it.id == id }
+        savePassions()
+    }
+
+    /** Ultima passione proposta: la volta dopo si evita di ripeterla subito. */
+    var lastPassionId: String?
+        get() = prefs.getString(KEY_LAST_PASSION, null)
+        set(value) = prefs.edit().putString(KEY_LAST_PASSION, value).apply()
+
     var volumes: Map<String, Float>
         get() = prefs.getString(KEY_VOLUMES, null)?.let(::decodeMix) ?: emptyMap()
         set(value) = prefs.edit().putString(KEY_VOLUMES, encodeMix(value).toString()).apply()
@@ -77,6 +97,28 @@ class Store(context: Context) {
         return list
     }
 
+    private fun loadPassions(): List<Passion> {
+        val raw = prefs.getString(KEY_PASSIONS, null) ?: return emptyList()
+        return runCatching {
+            val arr = JSONArray(raw)
+            List(arr.length()) { i ->
+                val o = arr.getJSONObject(i)
+                val category = runCatching { PassionCategory.valueOf(o.getString("category")) }
+                    .getOrDefault(PassionCategory.ALTRO)
+                Passion(o.getString("id"), category, o.optString("detail"))
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    private fun savePassions() {
+        val arr = JSONArray().apply {
+            _passions.value.forEach {
+                put(JSONObject().put("id", it.id).put("category", it.category.name).put("detail", it.detail))
+            }
+        }
+        prefs.edit().putString(KEY_PASSIONS, arr.toString()).apply()
+    }
+
     private fun savePresets() {
         prefs.edit().putString(KEY_PRESETS, encodePresets(_presets.value)).apply()
     }
@@ -101,6 +143,8 @@ class Store(context: Context) {
         private const val KEY_VOLUMES = "volumes"
         private const val KEY_LAST_MIX = "last_mix"
         private const val KEY_TIMER = "last_timer"
+        private const val KEY_PASSIONS = "passions"
+        private const val KEY_LAST_PASSION = "last_passion"
 
         private const val KEY_ONBOARDING = "onboarding_done"
         private const val KEY_EXAMPLES_REMOVED = "examples_removed"

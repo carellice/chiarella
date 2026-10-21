@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Chiarella.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="NightColor">#080B19</Color>
+            <Color x:Key="SurfaceColor">#161B33</Color>
+            <Color x:Key="LavenderColor">#8B7CF6</Color>
+            <Color x:Key="SkyColor">#5EC8F2</Color>
+            <SolidColorBrush x:Key="TextBrush" Color="#EDF0FA" />
+            <SolidColorBrush x:Key="MutedBrush" Color="#A0A8C6" />
+            <SolidColorBrush x:Key="FaintBrush" Color="#6B7396" />
+            <SolidColorBrush x:Key="PeachBrush" Color="#FFB38A" />
+            <SolidColorBrush x:Key="GlassBrush" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="GlassBorderBrush" Color="#1FFFFFFF" />
+            <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#8B7CF6" Offset="0" />
+                <GradientStop Color="#5EC8F2" Offset="1" />
+            </LinearGradientBrush>
+            <Style x:Key="OverlineText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="CharacterSpacing" Value="160" />
+                <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            </Style>
+            <Style x:Key="RoundButton" TargetType="Button">
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="CornerRadius" Value="20" />
+                <Setter Property="Background" Value="#12FFFFFF" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="PillButton" TargetType="Button">
+                <Setter Property="Height" Value="50" />
+                <Setter Property="CornerRadius" Value="25" />
+                <Setter Property="Background" Value="#12FFFFFF" />
+                <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <Style x:Key="GradientButton" TargetType="Button">
+                <Setter Property="Height" Value="54" />
+                <Setter Property="CornerRadius" Value="27" />
+                <Setter Property="Background" Value="{StaticResource AccentGradient}" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

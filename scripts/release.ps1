@@ -2,9 +2,10 @@
   Pubblica una nuova versione di Chiarella su GitHub Releases.
 
   1. alza la versione (versionCode +1, versionName: ultimo numero +1, es. 1.4 -> 1.5)
-  2. compila l'APK firmato (assembleRelease)
+     nell'app Android e nell'app Windows
+  2. compila l'APK firmato (assembleRelease), l'app Windows (zip autonomo) e la versione web (zip)
   3. commit "Versione X", tag vX, push
-  4. crea la release vX su GitHub con l'APK allegato
+  4. crea la release vX su GitHub con APK, zip Windows e zip web allegati
 
   L'app controlla l'ultima release e propone l'aggiornamento agli utenti.
 
@@ -85,6 +86,15 @@ $updated = $original -replace 'versionCode\s*=\s*\d+', "versionCode = $newCode" 
                      -replace 'versionName\s*=\s*"[^"]+"', "versionName = `"$Version`""
 [IO.File]::WriteAllText($gradleFile, $updated, $utf8)
 
+$winProject = Join-Path $root "windows\Chiarella.Windows\Chiarella.Windows.csproj"
+$winOriginal = [IO.File]::ReadAllText($winProject, $utf8)
+[IO.File]::WriteAllText($winProject, ($winOriginal -replace '<Version>[^<]+</Version>', "<Version>$Version</Version>"), $utf8)
+
+function Restore-Versions {
+    [IO.File]::WriteAllText($gradleFile, $original, $utf8)
+    [IO.File]::WriteAllText($winProject, $winOriginal, $utf8)
+}
+
 # ------------------------------------------------------------------ build
 try {
     Step "Compilazione dell'APK $Version"
@@ -93,7 +103,7 @@ try {
     Remove-Item "app\build\intermediates\dex\release" -Recurse -Force -ErrorAction SilentlyContinue
     Run ".\gradlew.bat" @("assembleRelease", "--console=plain", "-q")
 } catch {
-    [IO.File]::WriteAllText($gradleFile, $original, $utf8)
+    Restore-Versions
     Fail "Compilazione non riuscita, versione ripristinata a $name. $_"
 }
 
@@ -103,6 +113,33 @@ $apk = Join-Path $distDir "Chiarella-$Version.apk"
 Copy-Item "app\build\outputs\apk\release\app-release.apk" $apk -Force -ErrorAction Stop
 Copy-Item $apk (Join-Path $distDir "Chiarella.apk") -Force
 Write-Host ("APK: {0} ({1:N1} MB)" -f $apk, ((Get-Item $apk).Length / 1MB))
+
+$sounds = Join-Path $root "app\src\main\res\raw"
+try {
+    Step "Compilazione dell'app Windows $Version"
+    $winOut = Join-Path $distDir "windows-$Version"
+    Remove-Item $winOut -Recurse -Force -ErrorAction SilentlyContinue
+    Run "dotnet" @("publish", (Join-Path $root "windows\Chiarella.Windows"), "-c", "Release", "-r", "win-x64",
+        "-p:Platform=x64", "-o", $winOut, "--nologo", "-v", "q")
+    $winZip = Join-Path $distDir "Chiarella-Windows-$Version.zip"
+    Remove-Item $winZip -ErrorAction SilentlyContinue
+    Compress-Archive -Path (Join-Path $winOut "*") -DestinationPath $winZip
+    Write-Host ("Windows: {0} ({1:N1} MB)" -f $winZip, ((Get-Item $winZip).Length / 1MB))
+
+    Step "Pacchetto della versione web $Version"
+    $webOut = Join-Path $distDir "web-$Version"
+    Remove-Item $webOut -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $root "web") $webOut -Recurse
+    New-Item -ItemType Directory -Force (Join-Path $webOut "sounds") | Out-Null
+    Copy-Item (Join-Path $sounds "*.ogg") (Join-Path $webOut "sounds")
+    $webZip = Join-Path $distDir "Chiarella-Web-$Version.zip"
+    Remove-Item $webZip -ErrorAction SilentlyContinue
+    Compress-Archive -Path (Join-Path $webOut "*") -DestinationPath $webZip
+    Write-Host ("Web: {0} ({1:N1} MB)" -f $webZip, ((Get-Item $webZip).Length / 1MB))
+} catch {
+    Restore-Versions
+    Fail "Pacchetti Windows/web non riusciti, versione ripristinata a $name. $_"
+}
 
 # ------------------------------------------------------------------ git + release
 try {
@@ -115,7 +152,7 @@ try {
     Step "Pubblicazione della release su GitHub"
     $notesFile = Join-Path $env:TEMP "chiarella-notes-$Version.md"
     [IO.File]::WriteAllText($notesFile, $Notes, $utf8)
-    Run "gh" @("release", "create", $tag, $apk, "--title", "Chiarella $Version", "--notes-file", $notesFile)
+    Run "gh" @("release", "create", $tag, $apk, $winZip, $webZip, "--title", "Chiarella $Version", "--notes-file", $notesFile)
     Remove-Item $notesFile -ErrorAction SilentlyContinue
 } catch {
     Fail "$_"
