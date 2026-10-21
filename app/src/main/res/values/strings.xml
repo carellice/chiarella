@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Chiarella</string>
+    <string name="widget_name">Chiarella · Mix</string>
+    <string name="widget_description">Avvia, metti in pausa e scegli i tuoi profili di suoni rilassanti.</string>
+    <string name="channel_playback">Riproduzione</string>
+    <string name="channel_playback_desc">Controlli dei suoni in riproduzione e timer di spegnimento</string>
+</resources>

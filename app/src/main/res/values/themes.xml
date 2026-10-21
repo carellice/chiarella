@@ -1,0 +1,17 @@
+<resources>
+    <color name="night">#FF080B19</color>
+    <color name="accent">#FF8B7CF6</color>
+
+    <style name="Theme.Chiarella" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/night</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.Chiarella.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/night</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Chiarella</item>
+    </style>
+</resources>

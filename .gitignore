@@ -1,0 +1,20 @@
+# Build
+.gradle/
+build/
+.kotlin/
+local.properties
+*.apk
+dist/
+
+# IDE
+.idea/
+*.iml
+
+# Registrazioni originali (pesanti): l'app usa i loop già elaborati in app/src/main/res/raw
+loop-chiarella/
+anteprime-giunture/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
