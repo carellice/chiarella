@@ -1,5 +1,6 @@
-// Cache per l'uso offline: l'interfaccia subito, i suoni man mano che vengono ascoltati.
-const CACHE = "chiarella-v1";
+// I suoni sono precaricati dall'app, anche alla prima visita senza worker attivo.
+const CACHE = "chiarella-v2";
+const SOUND_CACHE = "chiarella-audio-v1";
 const SHELL = ["./", "index.html", "style.css", "data.js", "app.js", "icon-512.png", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
@@ -7,8 +8,7 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));
-  self.clients.claim();
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("chiarella-") && k !== CACHE && k !== SOUND_CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", (e) => {
@@ -17,7 +17,7 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     isSound
       ? caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
-          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
+          if (res.ok) { const copy = res.clone(); e.waitUntil(caches.open(SOUND_CACHE).then((c) => c.put(e.request, copy)).catch(() => {})); }
           return res;
         }))
       // Interfaccia: prima la rete (così gli aggiornamenti arrivano subito), poi la cache.

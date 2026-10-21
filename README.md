@@ -61,6 +61,10 @@ dalla cartella del progetto e apri `/web/` (i suoni vengono presi da `app/src/ma
 python -m http.server 8765
 ```
 
+All'apertura una schermata mostra l'avanzamento del caricamento degli 11 suoni e rende disponibile l'interfaccia
+quando tutti i file sono pronti. I suoni vengono conservati nella cache del browser per gli accessi successivi e l'uso
+offline; se il caricamento fallisce, «Riprova» riprende senza riscaricare i file già pronti.
+
 Nel pacchetto della release i suoni sono già dentro `sounds/`. Il sito su GitHub Pages si aggiorna da solo a ogni push
 su `main` che tocca `web/` o i suoni (workflow `.github/workflows/pages.yml`).
 

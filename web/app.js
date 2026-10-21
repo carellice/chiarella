@@ -32,6 +32,9 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() +
 
 // ------------------------------------------------------------------ audio
 
+const SOUND_CACHE = "chiarella-audio-v1";
+let soundsReady = false;
+
 /**
  * Motore audio con Web Audio API: ogni suono è un AudioBuffer in loop (senza giunture,
  * a livello di campione) con il suo guadagno; tutti passano da un guadagno generale.
@@ -41,6 +44,7 @@ const audio = {
   master: null,
   voices: new Map(),
   buffers: new Map(),
+  files: new Map(),
 
   ensure() {
     if (this.ctx) return;
@@ -50,15 +54,38 @@ const audio = {
   },
 
   /** I suoni stanno in `sounds/`; avviando il sito dalla cartella del progetto si usano quelli dell'app. */
-  load(id) {
-    if (!this.buffers.has(id)) {
+  download(id) {
+    if (!this.files.has(id)) {
       const p = (async () => {
+        const cache = globalThis.caches ? await caches.open(SOUND_CACHE).catch(() => null) : null;
         for (const url of [`sounds/${id}.ogg`, `../app/src/main/res/raw/${id}.ogg`]) {
-          const res = await fetch(url).catch(() => null);
-          if (res && res.ok) return this.ctx.decodeAudioData(await res.arrayBuffer());
+          const cached = cache && await cache.match(url).catch(() => null);
+          if (cached) return cached.arrayBuffer();
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 60_000);
+          try {
+            const res = await fetch(url, { signal: controller.signal });
+            if (!res.ok) continue;
+            const copy = res.clone();
+            const data = await res.arrayBuffer();
+            // La cache può essere piena o non disponibile: i file restano comunque in memoria.
+            if (cache) await cache.put(url, copy).catch(() => {});
+            return data;
+          } catch { /* prova anche il percorso usato nello sviluppo locale */ }
+          finally { clearTimeout(timeout); }
         }
         throw new Error("Suono non trovato: " + id);
       })();
+      p.catch(() => this.files.delete(id));
+      this.files.set(id, p);
+    }
+    return this.files.get(id);
+  },
+
+  load(id) {
+    if (!this.buffers.has(id)) {
+      // Decodifica solo i suoni scelti: precaricarli tutti occuperebbe oltre 500 MB.
+      const p = this.download(id).then((data) => this.ctx.decodeAudioData(data.slice(0)));
       p.catch(() => this.buffers.delete(id));
       this.buffers.set(id, p);
     }
@@ -84,6 +111,7 @@ const audio = {
       source.start(0, Math.random() * buffer.duration);
       voice.source = source;
       this.ramp(gain.gain, volumeOf(id), 1.2);
+      render();
     } catch (e) {
       console.error(e);
       this.voices.delete(id);
@@ -133,6 +161,7 @@ const audio = {
 // ------------------------------------------------------------------ azioni
 
 function toggleSound(id) {
+  if (!soundsReady) return;
   if (state.active.has(id)) {
     state.active.delete(id);
     audio.stop(id);
@@ -147,6 +176,7 @@ function toggleSound(id) {
 }
 
 function play() {
+  if (!soundsReady) return;
   if (state.active.size === 0) return;
   state.playing = true;
   audio.resume();
@@ -180,6 +210,7 @@ function setVolume(id, v) {
 }
 
 function applyPreset(preset) {
+  if (!soundsReady) return;
   if (state.presetId === preset.id) { togglePlay(); return; }
   const ids = Object.keys(preset.mix).filter((id) => soundById[id]);
   [...state.active].filter((id) => !ids.includes(id)).forEach((id) => { state.active.delete(id); audio.stop(id); });
@@ -305,8 +336,11 @@ function buildGrid() {
 function render() {
   document.querySelectorAll(".card").forEach((card) => {
     const on = state.active.has(card.dataset.id);
+    const loading = on && !audio.voices.get(card.dataset.id)?.source;
     card.classList.toggle("on", on);
     card.setAttribute("aria-pressed", on);
+    card.setAttribute("aria-busy", loading);
+    card.querySelector("small").textContent = loading ? "Preparazione audio…" : soundById[card.dataset.id].tagline;
     card.querySelector(".vol").value = volumeOf(card.dataset.id);
   });
   const n = state.active.size;
@@ -846,9 +880,49 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#rel
 
 // ------------------------------------------------------------------ avvio
 
+async function prepareSounds() {
+  const loader = $("#sound-loader"), retry = $("#loader-retry"), progress = $("#loader-progress");
+  const restoreFocus = document.activeElement === retry;
+  retry.hidden = true;
+  loader.setAttribute("aria-busy", "true");
+  $("#loader-title").textContent = "Prepariamo la tua quiete";
+  $("#loader-description").textContent = "Carichiamo i suoni sul tuo dispositivo. La prima volta può volerci un momento.";
+  progress.max = SOUNDS.length;
+  progress.value = 0;
+  let completed = 0;
+  const pending = [...SOUNDS];
+  $("#loader-status").textContent = `0 di ${SOUNDS.length} suoni pronti`;
+  // Due download alla volta, anche per non sovraccaricare le connessioni mobili.
+  const worker = async () => {
+    while (pending.length) {
+      const sound = pending.shift();
+      await audio.download(sound.id);
+      progress.value = ++completed;
+      $("#loader-status").textContent = `${completed} di ${SOUNDS.length} suoni pronti`;
+    }
+  };
+  const results = await Promise.allSettled([worker(), worker()]);
+  loader.setAttribute("aria-busy", "false");
+  if (results.some((result) => result.status === "rejected")) {
+    $("#loader-title").textContent = "Il caricamento si è interrotto";
+    $("#loader-description").textContent = "Controlla la connessione e riprova. I suoni già caricati non verranno scaricati di nuovo.";
+    retry.hidden = false;
+    retry.focus();
+    return;
+  }
+  soundsReady = true;
+  $("#home").inert = false;
+  $("#home").setAttribute("aria-busy", "false");
+  document.body.classList.remove("loading-sounds");
+  loader.hidden = true;
+  if (restoreFocus) $("#btn-help").focus();
+}
+
+$("#loader-retry").addEventListener("click", prepareSounds);
 buildGrid();
 render();
 requestAnimationFrame(frame);
+prepareSounds();
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => { /* offline non disponibile */ });
 }

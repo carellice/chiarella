@@ -32,6 +32,23 @@ svg { width: 1em; height: 1em; fill: currentColor; }
 
 #aurora { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; }
 
+/* Visibile dal primo rendering, finché tutti i file audio sono disponibili. */
+body.loading-sounds { overflow: hidden; }
+.sound-loader {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  padding: calc(env(safe-area-inset-top) + 24px) var(--gutter) calc(env(safe-area-inset-bottom) + 24px);
+  overflow-y: auto; background: radial-gradient(ellipse at 50% 30%, #242447, var(--night) 70%);
+}
+.loader-content { width: min(440px, 100%); text-align: center; }
+.loader-content img { display: block; margin: 0 auto 24px; border-radius: 24px; }
+.loader-content h1 { font-size: clamp(28px, 6vw, 36px); margin-top: 10px; }
+.loader-content .muted { margin: 16px 0 28px; }
+#loader-progress { display: block; width: 100%; height: 8px; border: 0; border-radius: 99px; overflow: hidden; background: var(--surface-high); color: var(--sky); }
+#loader-progress::-webkit-progress-bar { background: var(--surface-high); border-radius: 99px; }
+#loader-progress::-webkit-progress-value { background: linear-gradient(90deg, var(--lavender), var(--sky)); border-radius: 99px; transition: width .25s; }
+#loader-progress::-moz-progress-bar { background: var(--sky); border-radius: 99px; }
+#loader-status { min-height: 24px; color: var(--muted); font-size: 14px; }
+
 .screen { max-width: 1100px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 24px) var(--gutter) 140px; }
 
 .overline { font-size: 11px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); }
