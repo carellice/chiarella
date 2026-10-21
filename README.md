@@ -22,7 +22,7 @@ Dall'[ultima release](https://github.com/carellice/chiarella/releases/latest):
 
 - **Android**: scarica `Chiarella-X.apk` e installalo (Android 8.0 o successivo). Gli aggiornamenti successivi arrivano direttamente dall'app.
 - **Windows**: scarica `Chiarella-Windows-X.zip`, estrailo dove preferisci e avvia `Chiarella.exe` (Windows 10 1809 o successivo, 64 bit). Non serve installare nulla.
-- **Web**: scarica `Chiarella-Web-X.zip` e pubblica il contenuto su un qualsiasi hosting statico (es. GitHub Pages). Si installa anche come app dal browser.
+- **Web**: apri **[carellice.github.io/chiarella](https://carellice.github.io/chiarella/)**. Si installa anche come app dal browser e funziona offline. In alternativa `Chiarella-Web-X.zip` si può pubblicare su un qualsiasi hosting statico.
 
 ## Funzioni
 
@@ -61,7 +61,8 @@ dalla cartella del progetto e apri `/web/` (i suoni vengono presi da `app/src/ma
 python -m http.server 8765
 ```
 
-Nel pacchetto della release i suoni sono già dentro `sounds/`.
+Nel pacchetto della release i suoni sono già dentro `sounds/`. Il sito su GitHub Pages si aggiorna da solo a ogni push
+su `main` che tocca `web/` o i suoni (workflow `.github/workflows/pages.yml`).
 
 ## I suoni e i loop
 
