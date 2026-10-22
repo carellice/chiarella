@@ -63,6 +63,10 @@
       <strong id="player-title">Il tuo mix</strong>
       <small id="player-sub">In riproduzione</small>
     </div>
+    <button class="round vol-btn" id="btn-volume" title="Volume generale" aria-label="Volume generale">
+      <svg class="knob" viewBox="0 0 44 44"><path class="track" d="M10.7 33.3 A16 16 0 1 1 33.3 33.3"/><path class="level" id="knob-level" d="M10.7 33.3 A16 16 0 1 1 33.3 33.3"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><path id="vol-icon" d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4Z"/></svg>
+    </button>
     <button class="round" id="btn-timer" title="Timer" aria-label="Timer">
       <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1Zm-4 13h2V8h-2v6Zm8-6.6 1.4-1.4c-.4-.5-.9-1-1.4-1.4L17.6 6A9 9 0 1 0 21 13a9 9 0 0 0-2-5.6ZM12 20a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg>
       <span class="timer-badge" id="timer-badge" hidden></span>
@@ -155,6 +159,19 @@
     </div>
   </dialog>
 
+  <dialog id="dlg-volume">
+    <div class="row master-head">
+      <div><h3>Volume generale</h3><p class="muted">Alza o abbassa tutta l'app insieme. I volumi dei singoli suoni restano come li hai scelti.</p></div>
+      <strong class="master-pct" id="master-pct">100%</strong>
+    </div>
+    <input type="range" id="master-range" class="master-range" min="0" max="1" step="0.01" aria-label="Volume generale" />
+    <div class="timer-chips master-chips" id="master-chips">
+      <button data-level="0.25">25%</button><button data-level="0.5">50%</button><button data-level="0.75">75%</button><button data-level="1">100%</button>
+    </div>
+    <div id="master-mix"></div>
+    <button class="link close" data-close>Chiudi</button>
+  </dialog>
+
   <dialog id="dlg-timer">
     <h3>Timer di spegnimento</h3>
     <p class="muted">Allo scadere i suoni sfumano dolcemente fino al silenzio.</p>
@@ -191,7 +208,7 @@
     <h3>Come funziona</h3>
     <ul class="help">
       <li><b>Accendi e mescola</b> — tocca una card per accendere un suono, toccala di nuovo per spegnerlo. Puoi accenderne quanti vuoi insieme.</li>
-      <li><b>Regola il volume</b> — ogni suono acceso ha il suo cursore.</li>
+      <li><b>Regola il volume</b> — ogni suono acceso ha il suo cursore; il pulsante con l'altoparlante nella barra in basso regola il volume generale di tutta l'app.</li>
       <li><b>Dettaglio del suono</b> — clic destro (o pressione lunga sul telefono) su una card: descrizione, momenti ideali e suoni da abbinare.</li>
       <li><b>Profili</b> — salva il mix corrente con «Salva mix» e ritrovalo con un tocco. Tieni premuto (o clic destro) per eliminarlo.</li>
       <li><b>Timer</b> — dalla barra in basso: allo scadere i suoni sfumano fino al silenzio.</li>

@@ -332,3 +332,24 @@ kbd { background: rgba(255,255,255,.1); border-radius: 6px; padding: 1px 6px; fo
 .sound-dialog[open] .sd-step:nth-child(3) { animation-delay: .2s; } .sound-dialog[open] .sd-step:nth-child(4),
 .sound-dialog[open] .sd-step:nth-child(5) { animation-delay: .26s; } .sound-dialog[open] .sd-step:nth-child(6) { animation-delay: .32s; }
 .sound-dialog[open] .sd-step:nth-child(7) { animation-delay: .38s; }
+
+/* Volume generale */
+.vol-btn { position: relative; }
+.vol-btn .knob { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.vol-btn .knob .track { stroke: rgba(255,255,255,.1); }
+.vol-btn .knob .level { stroke: var(--lavender); stroke-dasharray: 75.4; transition: stroke-dashoffset .35s; }
+.vol-btn .ico { position: relative; font-size: 18px; color: var(--text); }
+.vol-btn.muted .ico { color: var(--faint); }
+.master-head { align-items: flex-end; gap: 16px; }
+.master-head p { margin: 4px 0 0; }
+.master-pct { font-size: 40px; font-weight: 300; font-variant-numeric: tabular-nums; }
+input.master-range { width: 100%; height: 12px; margin: 18px 0 4px; accent-color: var(--lavender);
+  background: linear-gradient(90deg, var(--lavender), var(--sky)) 0 / var(--fill, 100%) 100% no-repeat, rgba(255,255,255,.1); }
+.master-range::-webkit-slider-thumb { width: 24px; height: 24px; }
+.master-range::-moz-range-thumb { width: 24px; height: 24px; }
+.master-chips { grid-template-columns: repeat(4, 1fr); margin: 14px 0 6px; }
+.master-chips button.sel { background: color-mix(in srgb, var(--lavender) 45%, transparent); border-color: var(--lavender); }
+#master-mix .sd-label { display: block; margin-top: 14px; }
+#master-mix .mixrow .bar { position: relative; }
+#master-mix .mixrow .bar b { position: absolute; inset: 0 auto 0 0; background: rgba(255,255,255,.14); border-radius: 99px; }
+#master-mix .mixrow .bar i { position: relative; transition: width .3s; }

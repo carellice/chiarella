@@ -41,6 +41,8 @@ class Mixer(private val context: Context, private val store: Store) {
         val timerEndsAt: Long = 0L,
         val timerDurationMs: Long = 0L,
         val presetId: String? = null,
+        /** Volume generale (0..1): si applica sopra a quello di ogni suono. */
+        val master: Float = 1f,
     ) {
         val hasMix get() = active.isNotEmpty()
         val timerActive get() = timerEndsAt > 0L
@@ -49,7 +51,7 @@ class Mixer(private val context: Context, private val store: Store) {
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val _state = MutableStateFlow(State(volumes = store.volumes))
+    private val _state = MutableStateFlow(State(volumes = store.volumes, master = store.masterVolume))
     val state: StateFlow<State> = _state.asStateFlow()
 
     private val voices = HashMap<String, LoopVoice>()
@@ -83,6 +85,14 @@ class Mixer(private val context: Context, private val store: Store) {
     fun setVolume(id: String, volume: Float) {
         _state.update { it.copy(volumes = it.volumes + (id to volume.coerceIn(0f, 1f)), presetId = null) }
         persist()
+        kick()
+    }
+
+    /** Alza o abbassa tutta l'app insieme; i volumi dei singoli suoni (e dei profili) restano invariati. */
+    fun setMasterVolume(volume: Float) {
+        val v = volume.coerceIn(0f, 1f)
+        _state.update { it.copy(master = v) }
+        store.masterVolume = v
         kick()
     }
 
@@ -230,7 +240,8 @@ class Mixer(private val context: Context, private val store: Store) {
             val cur = gains[id] ?: 0f
             val next = if (cur < target) min(cur + delta, target) else max(cur - delta, target)
             gains[id] = next
-            v.level = next * next // curva percettiva: lo slider risulta più naturale
+            // Curva percettiva (quadratica) sia per il suono sia per il volume generale.
+            v.level = next * next * s.master * s.master
             if (next != target) {
                 moving = true
             } else if (next == 0f && !s.isActive(id)) {

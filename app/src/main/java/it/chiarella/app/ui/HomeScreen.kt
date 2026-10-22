@@ -85,6 +85,7 @@ import it.chiarella.app.ui.components.PlayerBar
 import it.chiarella.app.ui.components.PresetRow
 import it.chiarella.app.ui.components.RoundIconButton
 import it.chiarella.app.ui.components.SavePresetSheet
+import it.chiarella.app.ui.components.MasterVolumeSheet
 import it.chiarella.app.ui.components.SoundCard
 import it.chiarella.app.ui.components.SoundDetailDialog
 import it.chiarella.app.ui.components.TimerSheet
@@ -114,6 +115,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
     var showSave by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<Preset?>(null) }
     var detailId by remember { mutableStateOf<String?>(null) }
+    var showMaster by remember { mutableStateOf(false) }
 
     // Permesso notifiche (Android 13+): chiesto la prima volta che parte la musica.
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -235,6 +237,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
                 onTogglePlay = mixer::togglePlay,
                 onStop = mixer::stopAll,
                 onTimer = { showTimer = true },
+                onVolume = { showMaster = true },
             )
         }
     }
@@ -250,6 +253,10 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
             onVolumeChange = { mixer.setVolume(sound.id, it) },
             onDismiss = { detailId = null },
         )
+    }
+
+    if (showMaster) {
+        MasterVolumeSheet(state = state, onChange = mixer::setMasterVolume, onDismiss = { showMaster = false })
     }
 
     if (showUpdate) {

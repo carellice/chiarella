@@ -17,6 +17,8 @@ const store = {
 const state = {
   active: new Set(),
   volumes: store.get("volumes", {}),
+  // Volume generale (0..1): si applica sopra a quello di ogni suono, senza cambiarlo.
+  masterVolume: store.get("masterVolume", 1),
   playing: false,
   presets: store.get("presets", []),
   presetId: null,
@@ -50,7 +52,15 @@ const audio = {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this.master = this.ctx.createGain();
-    this.master.connect(this.ctx.destination);
+    // Il guadagno "master" serve a pausa e timer; quello dell'utente è separato, così non si pestano i piedi.
+    this.user = this.ctx.createGain();
+    this.user.gain.value = perceptual(state.masterVolume);
+    this.master.connect(this.user);
+    this.user.connect(this.ctx.destination);
+  },
+
+  setUserVolume(v) {
+    if (this.ctx) this.ramp(this.user.gain, perceptual(v), 0.08);
   },
 
   /** I suoni stanno in `sounds/`; avviando il sito dalla cartella del progetto si usano quelli dell'app. */
@@ -367,6 +377,7 @@ function render() {
   renderPresets();
   renderTimerDialog();
   renderSoundDetail();
+  renderMaster();
   updateMediaSession();
 }
 
@@ -891,6 +902,49 @@ $("#btn-done").addEventListener("click", closeRelax);
 $("#btn-another").addEventListener("click", pick);
 $("#btn-again").addEventListener("click", () => showStep("breathe"));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#relax").hidden && !document.querySelector("dialog[open]")) closeRelax(); });
+
+// ------------------------------------------------------------------ volume generale
+
+/** Curva percettiva: a metà cursore il volume "sembra" a metà. */
+function perceptual(v) { return v * v; }
+
+const VOL_ICONS = { off: "M16.5 12A4.5 4.5 0 0 0 14 8v2.2l2.5 2.5V12Zm2.5 0c0 .9-.2 1.8-.5 2.6l1.5 1.5A8.9 8.9 0 0 0 21 12c0-4.3-3-7.9-7-8.8v2.1c2.9.9 5 3.5 5 6.7ZM4.3 3 3 4.3 7.7 9H3v6h4l5 5v-6.7l4.3 4.3c-.7.5-1.4.9-2.3 1.2v2.1a9 9 0 0 0 3.7-1.8l2 2 1.3-1.3-9-9L4.3 3ZM12 4 9.9 6.1 12 8.2V4Z", down: "M18.5 12A4.5 4.5 0 0 0 16 8v8a4.5 4.5 0 0 0 2.5-4ZM5 9v6h4l5 5V4L9 9H5Z", up: "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4ZM14 3.2v2.1c2.9.9 5 3.5 5 6.7s-2.1 5.8-5 6.7v2.1c4-.9 7-4.5 7-8.8s-3-7.9-7-8.8Z" };
+
+function setMasterVolume(v) {
+  state.masterVolume = Math.min(1, Math.max(0, v));
+  store.set("masterVolume", state.masterVolume);
+  audio.setUserVolume(state.masterVolume);
+  renderMaster();
+}
+
+function renderMaster() {
+  const v = state.masterVolume;
+  const btn = $("#btn-volume");
+  $("#knob-level").style.strokeDashoffset = String(75.4 * (1 - v));
+  $("#vol-icon").setAttribute("d", v < 0.01 ? VOL_ICONS.off : v < 0.5 ? VOL_ICONS.down : VOL_ICONS.up);
+  btn.classList.toggle("muted", v < 0.01);
+  btn.setAttribute("aria-label", `Volume generale ${Math.round(v * 100)}%`);
+  if (!$("#dlg-volume").open) return;
+  const range = $("#master-range");
+  if (document.activeElement !== range) range.value = v;
+  range.style.setProperty("--fill", `${v * 100}%`);
+  $("#master-pct").textContent = `${Math.round(v * 100)}%`;
+  document.querySelectorAll("#master-chips [data-level]").forEach((b) =>
+    b.classList.toggle("sel", Math.round(Number(b.dataset.level) * 100) === Math.round(v * 100)));
+  const ids = [...state.active];
+  $("#master-mix").innerHTML = ids.length ? `<span class="sd-label">Come esce ogni suono</span>` + ids.map((id) => {
+    const s = soundById[id], own = volumeOf(id), eff = own * v;
+    return `<div class="mixrow" style="--grad:linear-gradient(90deg,${s.primary},${s.secondary})"><div class="stack">${stackHtml([id])}</div>
+      <span>${s.name}</span><div class="bar"><b style="width:${own * 100}%"></b><i style="width:${eff * 100}%"></i></div><span>${Math.round(eff * 100)}%</span></div>`;
+  }).join("") : "";
+}
+
+$("#btn-volume").addEventListener("click", () => { $("#dlg-volume").showModal(); renderMaster(); });
+$("#master-range").addEventListener("input", (e) => setMasterVolume(Number(e.target.value)));
+$("#master-chips").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-level]");
+  if (b) { setMasterVolume(Number(b.dataset.level)); $("#master-range").value = state.masterVolume; }
+});
 
 // ------------------------------------------------------------------ dettaglio del suono
 

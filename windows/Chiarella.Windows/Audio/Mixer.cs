@@ -149,6 +149,8 @@ public sealed class Mixer : IDisposable
     private readonly string _soundsFolder = Path.Combine(AppContext.BaseDirectory, "Sounds");
     private readonly MixingSampleProvider _mix = new(WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2)) { ReadFully = true };
     private readonly MasterGain _master;
+    // Volume generale scelto dall'utente: separato dal guadagno usato per pausa e timer.
+    private readonly MasterGain _user;
     private readonly Dictionary<string, LoopVoice> _voices = [];
     private readonly DispatcherQueueTimer _ticker;
     private WasapiOut? _output;
@@ -167,6 +169,8 @@ public sealed class Mixer : IDisposable
     {
         _store = store;
         _master = new MasterGain(_mix);
+        _user = new MasterGain(_master);
+        _user.FadeTo(Perceptual(store.MasterVolume), 0);
         _ticker = DispatcherQueue.GetForCurrentThread().CreateTimer();
         _ticker.Interval = TimeSpan.FromSeconds(1);
         _ticker.Tick += (_, _) => TickTimer();
@@ -214,6 +218,19 @@ public sealed class Mixer : IDisposable
         PresetId = preset.Id;
         Play();
     }
+
+    public double MasterVolume => _store.MasterVolume;
+
+    /// <summary>Alza o abbassa tutta l'app insieme; i volumi dei singoli suoni (e dei profili) restano invariati.</summary>
+    public void SetMasterVolume(double volume)
+    {
+        _store.MasterVolume = Math.Clamp(volume, 0, 1);
+        _user.FadeTo(Perceptual(_store.MasterVolume), 0.08);
+        Changed?.Invoke();
+    }
+
+    /// <summary>Curva percettiva: a metà cursore il volume "sembra" a metà.</summary>
+    private static float Perceptual(double v) => (float)(v * v);
 
     public void Play()
     {
@@ -331,7 +348,7 @@ public sealed class Mixer : IDisposable
     {
         if (_output is not null) return;
         _output = new WasapiOut(AudioClientShareMode.Shared, true, 150);
-        _output.Init(_master);
+        _output.Init(_user);
     }
 
     public void Dispose()

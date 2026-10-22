@@ -27,6 +27,7 @@ Dall'[ultima release](https://github.com/carellice/chiarella/releases/latest):
 ## Funzioni
 
 - **11 suoni** in loop continuo, da accendere insieme e mescolare liberamente
+- **Volume generale**: dal pulsante con l'altoparlante nella barra in basso alzi o abbassi tutta l'app insieme, senza toccare i volumi dei singoli suoni (né dei profili); il pannello mostra anche come esce davvero ogni suono acceso
 - **Volume per ogni suono**, con slider dedicato, dissolvenze morbide e feedback aptico
 - **Dettaglio del suono**: tieni premuta una card (clic destro su Windows e sul web) e si apre una finestra animata con lo stato del suono (acceso/spento), il volume sempre regolabile, una descrizione, i momenti ideali (dormire, concentrarsi, rilassarsi) e i suoni con cui si abbina bene, da aggiungere con un tocco
 - **Play/Pausa** e **Ferma tutti**

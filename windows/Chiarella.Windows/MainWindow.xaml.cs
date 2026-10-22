@@ -160,6 +160,7 @@ public sealed partial class MainWindow : Window
         TimerBadge.Visibility = _mixer.TimerEndsAt is null ? Visibility.Collapsed : Visibility.Visible;
         if (_mixer.TimerEndsAt is { } e2) TimerBadgeText.Text = Countdown(e2 - DateTime.Now);
         UpdateTimerDialog();
+        RenderMasterVolume();
     }
 
     private string _presetsSignature = "";
@@ -462,13 +463,135 @@ public sealed partial class MainWindow : Window
         _updateTimerDialog = null;
     }
 
+    // ------------------------------------------------------------------ volume generale
+
+    private Action? _refreshVolumePanel;
+
+    private void RenderMasterVolume()
+    {
+        var v = _mixer.MasterVolume;
+        // L'arco è lungo circa 70.7 unità (270° su raggio 15) diviso lo spessore del tratto.
+        var length = 70.7 / VolumeArc.StrokeThickness;
+        VolumeArc.StrokeDashArray = [length * v, 100];
+        VolumeArc.Opacity = v < 0.005 ? 0 : 1;
+        VolumeIcon.Glyph = v < 0.01 ? "\uE74F" : v < 0.34 ? "\uE993" : v < 0.67 ? "\uE994" : "\uE995";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(VolumeButton, $"Volume generale {Math.Round(v * 100)}%");
+        _refreshVolumePanel?.Invoke();
+    }
+
+    private void VolumeButton_Click(object sender, RoutedEventArgs e)
+    {
+        var muted = (Brush)Application.Current.Resources["MutedBrush"];
+        var panel = new StackPanel { Spacing = 12, Width = 380, Padding = new Thickness(6) };
+        var head = new Grid();
+        var titles = new StackPanel { Margin = new Thickness(0, 0, 90, 0) };
+        titles.Children.Add(new TextBlock { Text = "Volume generale", FontSize = 20, FontWeight = FontWeights.SemiBold, Foreground = (Brush)Application.Current.Resources["TextBrush"] });
+        titles.Children.Add(new TextBlock { Text = "Alza o abbassa tutta l'app insieme. I volumi dei singoli suoni restano come li hai scelti.", FontSize = 13, Foreground = muted, TextWrapping = TextWrapping.Wrap });
+        var pct = new TextBlock { FontSize = 36, FontWeight = FontWeights.Light, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
+        head.Children.Add(titles);
+        head.Children.Add(pct);
+        panel.Children.Add(head);
+
+        var slider = new Slider { Minimum = 0, Maximum = 1, StepFrequency = 0.01, Value = _mixer.MasterVolume, Foreground = (Brush)Application.Current.Resources["AccentGradient"] };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(slider, "Livello volume generale");
+        var syncing = false;
+        slider.ValueChanged += (_, a) =>
+        {
+            if (syncing) return;
+            _mixer.SetMasterVolume(a.NewValue);
+            SaveSoon();
+        };
+        panel.Children.Add(slider);
+
+        var chips = new Grid { ColumnSpacing = 8 };
+        var chipButtons = new List<(Button Button, double Level)>();
+        foreach (var (level, i) in new[] { 0.25, 0.5, 0.75, 1.0 }.Select((l, i) => (l, i)))
+        {
+            chips.ColumnDefinitions.Add(new ColumnDefinition());
+            var b = new Button { Content = $"{level * 100:0}%", Style = (Style)Application.Current.Resources["PillButton"], Height = 42, CornerRadius = new CornerRadius(16) };
+            b.Click += (_, _) =>
+            {
+                _mixer.SetMasterVolume(level);
+                SaveSoon();
+            };
+            Grid.SetColumn(b, i);
+            chips.Children.Add(b);
+            chipButtons.Add((b, level));
+        }
+        panel.Children.Add(chips);
+
+        var mix = new StackPanel { Spacing = 8 };
+        panel.Children.Add(mix);
+
+        _refreshVolumePanel = () =>
+        {
+            var v = _mixer.MasterVolume;
+            pct.Text = $"{Math.Round(v * 100)}%";
+            syncing = true;
+            slider.Value = v;
+            syncing = false;
+            foreach (var (b, level) in chipButtons)
+            {
+                var sel = Math.Round(level * 100) == Math.Round(v * 100);
+                b.Background = new SolidColorBrush(sel ? Catalog.Hex("#8B7CF6").WithAlpha(0.45) : Color.FromArgb(0x12, 255, 255, 255));
+            }
+            mix.Children.Clear();
+            if (_mixer.Active.Count == 0) return;
+            mix.Children.Add(new TextBlock { Text = "COME ESCE OGNI SUONO", Style = (Style)Application.Current.Resources["OverlineText"], Foreground = (Brush)Application.Current.Resources["FaintBrush"], Margin = new Thickness(0, 6, 0, 0) });
+            foreach (var id in _mixer.Active)
+            {
+                var s = Catalog.Sound(id)!;
+                var own = _store.Volume(id);
+                var row = new Grid { ColumnSpacing = 10 };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
+                row.ColumnDefinitions.Add(new ColumnDefinition());
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });
+                row.Children.Add(Paint.Badge(s.Icon, s.Primary, s.Secondary, 26));
+                var name = new TextBlock { Text = s.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+                Grid.SetColumn(name, 1);
+                // In trasparenza il volume del suono, pieno quello che si sente davvero.
+                var bar = new Grid { Height = 8, VerticalAlignment = VerticalAlignment.Center, CornerRadius = new CornerRadius(4), Background = new SolidColorBrush(Color.FromArgb(0x14, 255, 255, 255)) };
+                bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(own, GridUnitType.Star) });
+                bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1 - own, GridUnitType.Star) });
+                var ownFill = new Grid { Background = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), CornerRadius = new CornerRadius(4) };
+                ownFill.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(v, 0.0001), GridUnitType.Star) });
+                ownFill.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(1 - v, 0.0001), GridUnitType.Star) });
+                ownFill.Children.Add(new Border { Background = Paint.Diagonal(s.Primary, s.Secondary), CornerRadius = new CornerRadius(4) });
+                bar.Children.Add(ownFill);
+                Grid.SetColumn(bar, 2);
+                var value = new TextBlock { Text = $"{Math.Round(own * v * 100)}%", Foreground = muted, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(value, 3);
+                row.Children.Add(name);
+                row.Children.Add(bar);
+                row.Children.Add(value);
+                mix.Children.Add(row);
+            }
+        };
+        _refreshVolumePanel();
+
+        var flyout = new Flyout { Content = panel, Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.Top };
+        flyout.FlyoutPresenterStyle = new Style(typeof(FlyoutPresenter))
+        {
+            Setters =
+            {
+                new Setter(Control.BackgroundProperty, new SolidColorBrush(Catalog.Hex("#161B33"))),
+                new Setter(Control.CornerRadiusProperty, new CornerRadius(24)),
+                new Setter(Control.PaddingProperty, new Thickness(18)),
+                new Setter(FrameworkElement.MaxWidthProperty, 460.0),
+            },
+        };
+        flyout.Closed += (_, _) => _refreshVolumePanel = null;
+        flyout.ShowAt(VolumeButton);
+    }
+
     private async void HelpButton_Click(object sender, RoutedEventArgs e)
     {
         var body = new StackPanel { Spacing = 12, MaxWidth = 460 };
         (string Title, string Text)[] items =
         [
             ("Accendi e mescola", "Clic su una card per accendere un suono, di nuovo per spegnerlo. Puoi accenderne quanti vuoi insieme."),
-            ("Regola il volume", "Ogni suono acceso ha il suo cursore."),
+            ("Regola il volume", "Ogni suono acceso ha il suo cursore; il pulsante con l'altoparlante nella barra in basso regola il volume generale di tutta l'app."),
             ("Dettaglio del suono", "Clic destro (o pressione lunga sul touch) su una card: stato, volume, descrizione e suoni da abbinare."),
             ("Profili", "Salva il mix corrente con «Salva mix» e ritrovalo con un clic. Clic destro per eliminarlo."),
             ("Timer", "Dalla barra in basso: allo scadere i suoni sfumano fino al silenzio."),

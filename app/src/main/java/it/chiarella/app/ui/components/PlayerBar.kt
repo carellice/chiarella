@@ -31,6 +31,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.automirrored.rounded.VolumeDown
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -69,6 +72,7 @@ fun PlayerBar(
     onTogglePlay: () -> Unit,
     onStop: () -> Unit,
     onTimer: () -> Unit,
+    onVolume: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sounds = state.active.mapNotNull { Sounds[it] }
@@ -113,6 +117,8 @@ fun PlayerBar(
             }
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        MasterVolumeButton(state.master, accent.first(), onVolume)
+        Spacer(Modifier.width(8.dp))
         TimerButton(
             active = state.timerActive,
             progress = if (state.timerDurationMs > 0) remaining.toFloat() / state.timerDurationMs else 0f,
@@ -175,6 +181,47 @@ private fun PlayButton(playing: Boolean, c1: Color, c2: Color, onClick: () -> Un
                 modifier = Modifier.size(30.dp),
             )
         }
+    }
+}
+
+/** Volume generale: l'icona cambia con il livello e l'anello mostra quanto è alto. */
+@Composable
+private fun MasterVolumeButton(master: Float, color: Color, onClick: () -> Unit) {
+    val shown by animateFloatAsState(master, tween(400), label = "masterRing")
+    Box(
+        Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.07f))
+            .clickable(onClick = onClick)
+            .drawBehind {
+                val stroke = 2.5.dp.toPx()
+                val inset = stroke / 2 + 1.dp.toPx()
+                val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+                // Anello aperto in basso, come una manopola del volume.
+                drawArc(
+                    color = Color.White.copy(alpha = 0.08f), startAngle = 135f, sweepAngle = 270f, useCenter = false,
+                    topLeft = Offset(inset, inset), size = arcSize, style = Stroke(stroke, cap = StrokeCap.Round),
+                )
+                if (shown > 0.005f) {
+                    drawArc(
+                        color = color, startAngle = 135f, sweepAngle = 270f * shown, useCenter = false,
+                        topLeft = Offset(inset, inset), size = arcSize, style = Stroke(stroke, cap = StrokeCap.Round),
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            when {
+                master < 0.01f -> Icons.AutoMirrored.Rounded.VolumeOff
+                master < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
+                else -> Icons.AutoMirrored.Rounded.VolumeUp
+            },
+            contentDescription = "Volume generale ${(master * 100).toInt()}%",
+            tint = if (master < 0.01f) Palette.TextMuted else Palette.Text,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

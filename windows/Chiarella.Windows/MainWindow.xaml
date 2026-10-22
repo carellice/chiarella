@@ -107,13 +107,26 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel x:Name="PlayerStack" Orientation="Horizontal" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock x:Name="PlayerTitle" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis" />
                     <TextBlock x:Name="PlayerSub" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Grid Grid.Column="2" VerticalAlignment="Center">
+                <Button Grid.Column="2" x:Name="VolumeButton" Style="{StaticResource RoundButton}" Padding="0"
+                        ToolTipService.ToolTip="Volume generale" AutomationProperties.Name="Volume generale" Click="VolumeButton_Click">
+                    <Grid Width="40" Height="40">
+                        <!-- Anello aperto in basso, come una manopola: mostra il livello del volume generale. -->
+                        <Path Stroke="#1AFFFFFF" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M 9.4 30.6 A 15 15 0 1 1 30.6 30.6" />
+                        <Path x:Name="VolumeArc" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Stroke="{StaticResource AccentGradient}" Data="M 9.4 30.6 A 15 15 0 1 1 30.6 30.6"
+                              StrokeDashArray="0 100" />
+                        <FontIcon x:Name="VolumeIcon" Glyph="&#xE767;" FontSize="16" />
+                    </Grid>
+                </Button>
+                <Grid Grid.Column="3" VerticalAlignment="Center">
                     <Button x:Name="TimerButton" Style="{StaticResource RoundButton}" ToolTipService.ToolTip="Timer di spegnimento"
                             AutomationProperties.Name="Timer di spegnimento" Click="TimerButton_Click">
                         <FontIcon Glyph="&#xE916;" FontSize="16" />
@@ -124,12 +137,12 @@
                         <TextBlock x:Name="TimerBadgeText" FontSize="10" FontWeight="Bold" Foreground="#1B1B2F" />
                     </Border>
                 </Grid>
-                <Button Grid.Column="3" x:Name="PlayButton" Width="52" Height="52" CornerRadius="26" Padding="0" BorderThickness="0"
+                <Button Grid.Column="4" x:Name="PlayButton" Width="52" Height="52" CornerRadius="26" Padding="0" BorderThickness="0"
                         Background="{StaticResource AccentGradient}" Foreground="White" Click="PlayButton_Click"
                         ToolTipService.ToolTip="Riproduci / pausa (Spazio)" AutomationProperties.Name="Riproduci / pausa (Spazio)">
                     <FontIcon x:Name="PlayIcon" Glyph="&#xE769;" FontSize="20" />
                 </Button>
-                <Button Grid.Column="4" Style="{StaticResource RoundButton}" ToolTipService.ToolTip="Ferma tutti" AutomationProperties.Name="Ferma tutti" Click="StopAll_Click">
+                <Button Grid.Column="5" Style="{StaticResource RoundButton}" ToolTipService.ToolTip="Ferma tutti" AutomationProperties.Name="Ferma tutti" Click="StopAll_Click">
                     <FontIcon Glyph="&#xE71A;" FontSize="14" />
                 </Button>
             </Grid>

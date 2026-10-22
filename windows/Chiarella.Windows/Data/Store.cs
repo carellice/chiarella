@@ -28,6 +28,8 @@ public sealed class Store
     public List<Passion> Passions { get; set; } = [];
     public Dictionary<string, double> Volumes { get; set; } = [];
     public int LastTimerMinutes { get; set; } = 30;
+    /// <summary>Volume generale dell'app (0..1): moltiplica quello dei singoli suoni senza cambiarlo.</summary>
+    public double MasterVolume { get; set; } = 1;
     public string? LastPassionId { get; set; }
     public bool HelpSeen { get; set; }
 

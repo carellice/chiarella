@@ -66,6 +66,11 @@ class Store(context: Context) {
         get() = prefs.getString(KEY_LAST_MIX, null)?.let(::decodeMix) ?: emptyMap()
         set(value) = prefs.edit().putString(KEY_LAST_MIX, encodeMix(value).toString()).apply()
 
+    /** Volume generale dell'app (0..1): moltiplica quello dei singoli suoni senza cambiarlo. */
+    var masterVolume: Float
+        get() = prefs.getFloat(KEY_MASTER, 1f)
+        set(value) = prefs.edit().putFloat(KEY_MASTER, value).apply()
+
     var lastTimerMinutes: Int
         get() = prefs.getInt(KEY_TIMER, 30)
         set(value) = prefs.edit().putInt(KEY_TIMER, value).apply()
@@ -143,6 +148,7 @@ class Store(context: Context) {
         private const val KEY_VOLUMES = "volumes"
         private const val KEY_LAST_MIX = "last_mix"
         private const val KEY_TIMER = "last_timer"
+        private const val KEY_MASTER = "master_volume"
         private const val KEY_PASSIONS = "passions"
         private const val KEY_LAST_PASSION = "last_passion"
 

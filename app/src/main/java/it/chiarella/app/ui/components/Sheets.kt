@@ -332,3 +332,115 @@ fun SavePresetSheet(
         }
     }
 }
+
+/**
+ * Volume generale: alza o abbassa tutta l'app insieme. Le barre sotto mostrano come esce davvero
+ * ogni suono acceso (suo volume × volume generale), senza toccare i volumi scelti.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MasterVolumeSheet(
+    state: Mixer.State,
+    onChange: (Float) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+    val sounds = state.active.mapNotNull { Sounds[it] }
+    val c1 = sounds.firstOrNull()?.primary ?: Palette.Lavender
+    val c2 = sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Palette.Surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.25f)) },
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp)
+                .navigationBarsPadding()
+        ) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Column(Modifier.weight(1f)) {
+                    Text("Volume generale", style = MaterialTheme.typography.headlineSmall, color = Palette.Text)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Alza o abbassa tutta l'app insieme. I volumi dei singoli suoni restano come li hai scelti.",
+                        style = MaterialTheme.typography.bodyMedium, color = Palette.TextMuted,
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
+                AnimatedContent(
+                    targetState = (state.master * 100).roundToInt(),
+                    transitionSpec = { fadeIn(tween(120)) togetherWith fadeOut(tween(120)) },
+                    label = "masterPct",
+                ) {
+                    Text("$it%", style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light), color = Palette.Text)
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+            VolumeSlider(state.master, onChange, c1, c2, Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(0.25f, 0.5f, 0.75f, 1f).forEach { level ->
+                    val selected = (state.master * 100).roundToInt() == (level * 100).roundToInt()
+                    val bg by animateFloatAsState(if (selected) 1f else 0f, tween(250), label = "level")
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg))
+                            .border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                onChange(level)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("${(level * 100).roundToInt()}%", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+                    }
+                }
+            }
+            if (sounds.isNotEmpty()) {
+                Spacer(Modifier.height(22.dp))
+                Text("COME ESCE OGNI SUONO", style = MaterialTheme.typography.labelSmall, color = Palette.TextFaint)
+                Spacer(Modifier.height(8.dp))
+                sounds.forEach { s ->
+                    val own = state.volume(s.id)
+                    val effective by animateFloatAsState(own * state.master, spring(), label = "effective")
+                    Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconStack(listOf(s), size = 28.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Text(s.name, style = MaterialTheme.typography.bodyMedium, color = Palette.Text, modifier = Modifier.width(110.dp), maxLines = 1)
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .height(8.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .drawBehind {
+                                    // In trasparenza il volume del suono, pieno quello che si sente davvero.
+                                    drawRoundRect(
+                                        Color.White.copy(alpha = 0.14f), size = Size(size.width * own, size.height),
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2),
+                                    )
+                                    drawRoundRect(
+                                        Brush.horizontalGradient(listOf(s.primary, s.secondary)),
+                                        size = Size(size.width * effective, size.height),
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2),
+                                    )
+                                }
+                        )
+                        Text(
+                            "${(own * state.master * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.labelMedium, color = Palette.TextMuted,
+                            textAlign = TextAlign.End, modifier = Modifier.width(44.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
