@@ -11,10 +11,10 @@ Per ogni file:
      così il limiter non crea gradini proprio nel punto di loop.
   3. Esporta in OGG Vorbis nella cartella res/raw dell'app e crea un'anteprima della giuntura.
 
-Uso: python process.py <cartella_sorgenti> <cartella_raw> <cartella_anteprime>
+Uso: python process.py <cartella_sorgenti> <cartella_raw> <cartella_anteprime> [--only falo]
 """
+import argparse
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
@@ -40,6 +40,9 @@ NAMES = {
     "Temporale": "temporale",
     "Vento": "vento",
 }
+
+# Le nuove registrazioni hanno precedenza sui vecchi WAV, conservati come sorgenti.
+SOURCE_OVERRIDES = {"falo": "falo nuovo.wav"}
 
 # ------------------------------------------------------------------ analisi a frame
 
@@ -194,18 +197,32 @@ def circular_process(y, af, tmp):
 
 
 def main():
-    src_dir, raw_dir, prev_dir = map(Path, sys.argv[1:4])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("src_dir", type=Path)
+    parser.add_argument("raw_dir", type=Path)
+    parser.add_argument("prev_dir", type=Path)
+    parser.add_argument("--only", choices=sorted(NAMES.values()))
+    args = parser.parse_args()
+    src_dir, raw_dir, prev_dir = args.src_dir, args.raw_dir, args.prev_dir
+    sources = {}
+    for f in sorted(src_dir.glob("*.wav")):
+        if f.name not in SOURCE_OVERRIDES.values():
+            sources[NAMES[f.name.split("_loop_")[0]]] = f
+    for name, filename in SOURCE_OVERRIDES.items():
+        if (src_dir / filename).is_file():
+            sources[name] = src_dir / filename
+    if args.only:
+        sources = {args.only: sources[args.only]}
     prev_dir.mkdir(parents=True, exist_ok=True)
     report = []
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
-        for f in sorted(src_dir.glob("*.wav")):
-            key = f.name.split("_loop_")[0]
-            name = NAMES[key]
-            if name in SHORT:
+        for name, f in sources.items():
+            decoded = decode(f)
+            if len(decoded) / SR < 20 and name in SHORT:
                 y, how = granular_loop(f, *SHORT[name])
             else:
-                y, how = seal_loop(decode(f))
+                y, how = seal_loop(decoded)
 
             # Loudness: misura, calcola il guadagno e limita solo il necessario.
             write_wav(tmp / "m.wav", y)
@@ -239,7 +256,8 @@ def main():
                     f"| {how}")
             print(line, flush=True)
             report.append(line)
-    (prev_dir / "report.txt").write_text("\n".join(report), encoding="utf-8")
+    report_name = f"report_{args.only}.txt" if args.only else "report.txt"
+    (prev_dir / report_name).write_text("\n".join(report), encoding="utf-8")
 
 
 if __name__ == "__main__":

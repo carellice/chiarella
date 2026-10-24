@@ -34,7 +34,7 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() +
 
 // ------------------------------------------------------------------ audio
 
-const SOUND_CACHE = "chiarella-audio-v1";
+const SOUND_CACHE = "chiarella-audio-v2";
 let soundsReady = false;
 
 /**
@@ -68,7 +68,9 @@ const audio = {
     if (!this.files.has(id)) {
       const p = (async () => {
         const cache = globalThis.caches ? await caches.open(SOUND_CACHE).catch(() => null) : null;
-        for (const url of [`sounds/${id}.ogg`, `../app/src/main/res/raw/${id}.ogg`]) {
+        // Il nuovo URL evita anche la vecchia cache del worker ancora attivo durante l'aggiornamento.
+        const revision = id === "falo" ? "?v=2" : "";
+        for (const url of [`sounds/${id}.ogg${revision}`, `../app/src/main/res/raw/${id}.ogg${revision}`]) {
           const cached = cache && await cache.match(url).catch(() => null);
           if (cached) return cached.arrayBuffer();
           const controller = new AbortController();

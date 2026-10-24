@@ -1,6 +1,6 @@
 // I suoni sono precaricati dall'app, anche alla prima visita senza worker attivo.
-const CACHE = "chiarella-v3";
-const SOUND_CACHE = "chiarella-audio-v1";
+const CACHE = "chiarella-v4";
+const SOUND_CACHE = "chiarella-audio-v2";
 const SHELL = ["./", "index.html", "style.css", "data.js", "backup.js", "app.js", "icon-512.png", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
@@ -13,10 +13,10 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  const isSound = e.request.url.endsWith(".ogg");
+  const isSound = new URL(e.request.url).pathname.endsWith(".ogg");
   e.respondWith(
     isSound
-      ? caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+      ? caches.open(SOUND_CACHE).then((c) => c.match(e.request)).then((hit) => hit || fetch(e.request).then((res) => {
           if (res.ok) { const copy = res.clone(); e.waitUntil(caches.open(SOUND_CACHE).then((c) => c.put(e.request, copy)).catch(() => {})); }
           return res;
         }))

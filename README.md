@@ -86,7 +86,7 @@ giunture dallo script `scripts/loops/process.py`, che scrive i file finali in `a
 - **File lunghi**: cerca i punti di loop in cui inizio e fine si somigliano di più (volume e timbro),
   preferendo momenti quieti (es. fra un'onda e l'altra), allinea la fase dei suoni tonali e applica una
   dissolvenza incrociata di 3-6 s. Il loop è continuo per costruzione.
-- **File corti** (falò 3 s, fiume 7 s): sintesi granulare, cioè un flusso di 75-90 s ricomposto in ordine
+- **File corti** (fiume 7 s): sintesi granulare, cioè un flusso di 75-90 s ricomposto in ordine
   casuale da frammenti della registrazione, anche leggermente ri-intonati, così lo schema non si riconosce.
 - **Volume uniforme**: tutti a -24 LUFS (la pioggia a -28 per non schiacciare le gocce), con limiter
   applicato "ad anello" per non creare gradini nel punto di loop.
@@ -102,6 +102,10 @@ corrispondenza in `NAMES` dentro `process.py` e lancia (serve Python con numpy e
 ```bash
 cd scripts/loops && python process.py ../../loop-chiarella ../../app/src/main/res/raw ../../anteprime-giunture
 ```
+
+Il falò usa la nuova registrazione `loop-chiarella/falo nuovo.wav` (circa 89 s), con precedenza
+sul vecchio WAV di 3 s. Per rigenerare soltanto questo suono aggiungi `--only falo` al comando;
+il loop mantiene la registrazione originale con una dissolvenza alla giuntura.
 
 Nomi, descrizioni, icone e colori dei suoni sono in
 `app/src/main/java/it/chiarella/app/audio/Sounds.kt`; profili e preferenze in `data/Store.kt`. Icona, splash e logo bianco si rigenerano con `scripts/gen_icon.py` a partire da `branding/chiarella_logo.png`.
