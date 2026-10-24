@@ -167,6 +167,20 @@ class Mixer(private val context: Context, private val store: Store) {
         kick()
     }
 
+    /** Include anche l'ultimo trascinamento dello slider, senza aspettare il salvataggio differito. */
+    fun flushPreferences() {
+        saveJob?.cancel()
+        val s = _state.value
+        store.volumes = s.volumes
+        if (s.hasMix) store.lastMix = s.active.associateWith { s.volume(it) }
+    }
+
+    fun reloadFromStore() {
+        saveJob?.cancel()
+        stopAll()
+        _state.value = State(volumes = store.volumes, master = store.masterVolume)
+    }
+
     // ---------------------------------------------------------------- timer
 
     fun startTimer(minutes: Int) {

@@ -69,7 +69,9 @@ h3 { font-size: 18px; font-weight: 600; margin: 22px 0 10px; }
 .round:hover { background: rgba(255,255,255,.12); }
 .round:active { transform: scale(.92); }
 
-.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header-top { display: flex; align-items: center; gap: 8px; }
+.header-top .overline { margin-right: auto; }
+.backup-actions { display: grid; gap: 12px; }
 .status { color: var(--muted); font-size: 16px; display: flex; align-items: center; gap: 10px; min-height: 24px; margin: 0; }
 
 /* Equalizzatore */

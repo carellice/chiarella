@@ -80,6 +80,28 @@ class Store(context: Context) {
         get() = prefs.getBoolean(KEY_ONBOARDING, false)
         set(value) = prefs.edit().putBoolean(KEY_ONBOARDING, value).apply()
 
+    fun backupData() = BackupData(presets.value, passions.value, volumes, masterVolume, lastMix,
+        lastTimerMinutes, onboardingDone, lastPassionId)
+
+    /** Un'unica scrittura: nessun dato viene toccato prima che il file sia stato validato. */
+    fun importBackup(data: BackupData) {
+        val previous = backupData()
+        fun write(d: BackupData): Boolean = prefs.edit()
+            .putString(KEY_PRESETS, encodePresets(d.presets))
+            .putString(KEY_PASSIONS, encodePassions(d.passions))
+            .putString(KEY_VOLUMES, encodeMix(d.volumes).toString())
+            .putString(KEY_LAST_MIX, encodeMix(d.lastMix).toString())
+            .putFloat(KEY_MASTER, d.masterVolume).putInt(KEY_TIMER, d.lastTimerMinutes)
+            .putBoolean(KEY_ONBOARDING, d.onboardingDone).putString(KEY_LAST_PASSION, d.lastPassionId)
+            .putBoolean(KEY_EXAMPLES_REMOVED, true).commit()
+        if (!write(data)) {
+            write(previous)
+            throw java.io.IOException("Impossibile salvare il backup. I dati precedenti sono stati mantenuti.")
+        }
+        _presets.value = data.presets
+        _passions.value = data.passions
+    }
+
     private fun loadPresets(): List<Preset> {
         val raw = prefs.getString(KEY_PRESETS, null) ?: return emptyList()
         val list = runCatching {
@@ -116,13 +138,14 @@ class Store(context: Context) {
     }
 
     private fun savePassions() {
-        val arr = JSONArray().apply {
-            _passions.value.forEach {
-                put(JSONObject().put("id", it.id).put("category", it.category.name).put("detail", it.detail))
-            }
-        }
-        prefs.edit().putString(KEY_PASSIONS, arr.toString()).apply()
+        prefs.edit().putString(KEY_PASSIONS, encodePassions(_passions.value)).apply()
     }
+
+    private fun encodePassions(list: List<Passion>): String = JSONArray().apply {
+        list.forEach {
+            put(JSONObject().put("id", it.id).put("category", it.category.name).put("detail", it.detail))
+        }
+    }.toString()
 
     private fun savePresets() {
         prefs.edit().putString(KEY_PRESETS, encodePresets(_presets.value)).apply()

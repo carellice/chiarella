@@ -585,6 +585,77 @@ public sealed partial class MainWindow : Window
         flyout.ShowAt(VolumeButton);
     }
 
+    private async void BackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        var body = new TextBlock
+        {
+            Text = "Porta profili, passioni, volumi e preferenze su un altro dispositivo. Lo stesso file funziona su web, Windows e Android.",
+            TextWrapping = TextWrapping.Wrap, MaxWidth = 420,
+        };
+        var choice = Dialog("Backup e ripristino", body);
+        choice.PrimaryButtonText = "Esporta backup";
+        choice.SecondaryButtonText = "Importa backup";
+        var action = await choice.ShowAsync();
+        try
+        {
+            var window = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (action == ContentDialogResult.Primary)
+            {
+                if (_mixer.HasMix) _store.LastMix = _mixer.Active.ToDictionary(id => id, id => _store.Volume(id));
+                var raw = Backup.Stringify(_store.BackupData());
+                var picker = new Windows.Storage.Pickers.FileSavePicker
+                {
+                    SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary,
+                    SuggestedFileName = $"Chiarella-backup-{DateTime.Now:yyyy-MM-dd}",
+                };
+                picker.FileTypeChoices.Add("Backup Chiarella", new List<string> { ".json" });
+                WinRT.Interop.InitializeWithWindow.Initialize(picker, window);
+                var file = await picker.PickSaveFileAsync();
+                if (file is null) return;
+                await Windows.Storage.FileIO.WriteTextAsync(file, raw);
+                await Dialog("Backup esportato", new TextBlock { Text = "Conserva il file per ripristinare i tuoi dati su qualsiasi dispositivo.", TextWrapping = TextWrapping.Wrap }).ShowAsync();
+            }
+            else if (action == ContentDialogResult.Secondary)
+            {
+                var picker = new Windows.Storage.Pickers.FileOpenPicker
+                {
+                    SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary,
+                };
+                picker.FileTypeFilter.Add(".json");
+                WinRT.Interop.InitializeWithWindow.Initialize(picker, window);
+                var file = await picker.PickSingleFileAsync();
+                if (file is null) return;
+                // Limite anche sullo stream: evita di leggere file grandi prima della validazione.
+                using var input = await file.OpenStreamForReadAsync();
+                using var bytes = new MemoryStream();
+                var buffer = new byte[8192];
+                int count;
+                while ((count = await input.ReadAsync(buffer)) > 0)
+                {
+                    if (bytes.Length + count > Backup.MaxBytes) throw new FormatException("Il file è troppo grande (massimo 2 MB).");
+                    bytes.Write(buffer, 0, count);
+                }
+                var data = Backup.Parse(System.Text.Encoding.UTF8.GetString(bytes.ToArray()));
+                var confirm = Dialog("Importare il backup?", new TextBlock
+                {
+                    Text = $"{data.Presets.Count} profili e {data.Passions.Count} passioni, con volumi e preferenze.\n\nSostituirà tutti i dati presenti su questo dispositivo. La riproduzione e il timer verranno fermati.",
+                    TextWrapping = TextWrapping.Wrap, MaxWidth = 420,
+                }, "Annulla");
+                confirm.PrimaryButtonText = "Sostituisci e importa";
+                if (await confirm.ShowAsync() != ContentDialogResult.Primary) return;
+                _store.ImportBackup(data);
+                _presetsSignature = "";
+                _mixer.ReloadFromStore();
+                Render();
+                await Dialog("Backup importato", new TextBlock { Text = "Profili, passioni e preferenze sono pronti.", TextWrapping = TextWrapping.Wrap }).ShowAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Dialog("Operazione non riuscita", new TextBlock { Text = ex.Message, TextWrapping = TextWrapping.Wrap, MaxWidth = 420 }).ShowAsync();
+        }
+    }
+
     private async void HelpButton_Click(object sender, RoutedEventArgs e)
     {
         var body = new StackPanel { Spacing = 12, MaxWidth = 460 };

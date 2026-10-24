@@ -31,6 +31,9 @@
     <header class="header intro" style="--step:0">
       <div class="header-top">
         <span class="overline" id="greeting">Buonasera</span>
+        <button class="round" id="btn-backup" title="Backup e ripristino" aria-label="Backup e ripristino">
+          <svg viewBox="0 0 24 24"><path d="M5 20h14v-6h2v8H3v-8h2v6Zm6-18h2v11l4-4 1.4 1.4L12 16.8l-6.4-6.4L7 9l4 4V2Z"/></svg>
+        </button>
         <button class="round" id="btn-help" title="Come funziona" aria-label="Come funziona">
           <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-5h2v2h-2v-2Zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3.2 1.6c-.9.7-2.2 1.6-2.2 3.4h2c0-1 .7-1.5 1.4-2A4 4 0 0 0 12 5Z"/></svg>
         </button>
@@ -137,6 +140,23 @@
   </section>
 
   <!-- Finestre -->
+  <dialog id="dlg-backup" aria-labelledby="backup-title">
+    <h3 id="backup-title">Backup e ripristino</h3>
+    <p class="muted">Porta profili, passioni, volumi e preferenze su un altro dispositivo. Lo stesso file funziona su web, Windows e Android.</p>
+    <div class="backup-actions">
+      <button class="gradient wide" id="backup-export">Esporta backup</button>
+      <button class="secondary wide" id="backup-import">Importa backup</button>
+    </div>
+    <input id="backup-file" type="file" accept=".json,application/json" hidden />
+    <p id="backup-message" class="muted" role="status" aria-live="polite"></p>
+    <div id="backup-confirm" hidden>
+      <p class="muted">L'importazione sostituirà tutti i profili, le passioni e le preferenze presenti su questo dispositivo. La riproduzione e il timer verranno fermati.</p>
+      <button class="gradient wide" id="backup-restore">Sostituisci e importa</button>
+      <button class="link wide" id="backup-cancel">Annulla importazione</button>
+    </div>
+    <button class="link close" data-close>Chiudi</button>
+  </dialog>
+
   <dialog id="dlg-sound" class="sound-dialog" aria-labelledby="sd-name">
     <div class="sd-head">
       <canvas id="sd-canvas"></canvas>
@@ -221,6 +241,7 @@
   <div class="toast" id="toast" hidden></div>
 
   <script src="data.js"></script>
+  <script src="backup.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

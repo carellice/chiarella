@@ -9,6 +9,8 @@ dist/
 # App Windows
 windows/**/bin/
 windows/**/obj/
+tests/windows/bin/
+tests/windows/obj/
 .vs/
 
 # IDE

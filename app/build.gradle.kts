@@ -36,6 +36,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions.unitTests.all {
+        it.systemProperty("chiarella.root", rootProject.projectDir.absolutePath)
+    }
 }
 
 kotlin {
@@ -45,6 +49,8 @@ kotlin {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
     val composeBom = platform("androidx.compose:compose-bom:2025.09.01")
     implementation(composeBom)
 

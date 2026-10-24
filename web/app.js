@@ -27,8 +27,8 @@ const state = {
   passions: store.get("passions", []),
 };
 const volumeOf = (id) => state.volumes[id] ?? 0.7;
-const soundById = Object.fromEntries(SOUNDS.map((s) => [s.id, s]));
-const categoryById = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+const soundById = Object.assign(Object.create(null), Object.fromEntries(SOUNDS.map((s) => [s.id, s])));
+const categoryById = Object.assign(Object.create(null), Object.fromEntries(CATEGORIES.map((c) => [c.id, c])));
 const $ = (sel) => document.querySelector(sel);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
@@ -181,6 +181,7 @@ function toggleSound(id) {
     if (!state.playing) play();
   }
   state.presetId = null;
+  rememberMix();
   if (state.active.size === 0) stopAll();
   render();
 }
@@ -213,6 +214,7 @@ function stopAll() {
 function setVolume(id, v) {
   state.volumes[id] = v;
   store.set("volumes", state.volumes);
+  rememberMix();
   audio.setVolume(id, v);
   state.presetId = null;
   renderPlayer();
@@ -230,6 +232,7 @@ function applyPreset(preset) {
     else { state.active.add(id); audio.start(id); }
   });
   store.set("volumes", state.volumes);
+  rememberMix();
   state.presetId = preset.id;
   play();
   render();
@@ -1025,6 +1028,103 @@ function closeSoundDetail() {
 })();
 
 // ------------------------------------------------------------------ avvio
+
+// ------------------------------------------------------------------ backup
+
+function rememberMix() {
+  if (state.active.size) store.set("lastMix", Object.fromEntries([...state.active].map((id) => [id, volumeOf(id)])));
+}
+
+function backupData() {
+  return {
+    presets: state.presets, passions: state.passions, volumes: state.volumes,
+    masterVolume: state.masterVolume,
+    lastMix: state.active.size ? Object.fromEntries([...state.active].map((id) => [id, volumeOf(id)])) : store.get("lastMix", {}),
+    lastTimerMinutes: store.get("lastTimer", 30), onboardingDone: store.get("onboardingDone", true),
+    lastPassionId: store.get("lastPassion", null),
+  };
+}
+
+function restoreBackup(data) {
+  const values = {
+    presets: data.presets, passions: data.passions, volumes: data.volumes, masterVolume: data.masterVolume,
+    lastMix: data.lastMix, lastTimer: data.lastTimerMinutes, onboardingDone: data.onboardingDone, lastPassion: data.lastPassionId,
+  };
+  const previous = new Map(Object.keys(values).map((key) => [key, localStorage.getItem("chiarella." + key)]));
+  try {
+    // Non usare store.set qui: un errore di scrittura deve annullare l'importazione.
+    Object.entries(values).forEach(([key, value]) => localStorage.setItem("chiarella." + key, JSON.stringify(value)));
+  } catch {
+    previous.forEach((value, key) => {
+      if (value === null) localStorage.removeItem("chiarella." + key);
+      else localStorage.setItem("chiarella." + key, value);
+    });
+    throw new Error("Impossibile salvare il backup. Controlla lo spazio disponibile nel browser.");
+  }
+  stopAll();
+  state.presets = data.presets;
+  state.passions = data.passions;
+  state.volumes = data.volumes;
+  state.masterVolume = data.masterVolume;
+  audio.setUserVolume(data.masterVolume);
+  range.value = data.lastTimerMinutes;
+  range.dispatchEvent(new Event("input"));
+  render();
+}
+
+let pendingBackup = null;
+function resetBackupImport() {
+  pendingBackup = null;
+  $("#backup-confirm").hidden = true;
+  $("#backup-file").value = "";
+}
+$("#btn-backup").addEventListener("click", () => {
+  resetBackupImport();
+  $("#backup-message").textContent = "";
+  $("#dlg-backup").showModal();
+});
+$("#dlg-backup").addEventListener("close", resetBackupImport);
+$("#backup-export").addEventListener("click", () => {
+  try {
+    const blob = new Blob([ChiarellaBackup.stringify(backupData())], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Chiarella-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    $("#backup-message").textContent = "Backup esportato. Conservalo per ripristinare i tuoi dati su qualsiasi dispositivo.";
+  } catch (e) { $("#backup-message").textContent = e.message; }
+});
+$("#backup-import").addEventListener("click", () => { resetBackupImport(); $("#backup-file").click(); });
+$("#backup-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    if (file.size > ChiarellaBackup.MAX_BYTES) throw new Error("Il file è troppo grande (massimo 2 MB).");
+    const data = ChiarellaBackup.parse(await file.text());
+    if (!$("#dlg-backup").open) return;
+    pendingBackup = data;
+    $("#backup-message").textContent = `Backup pronto: ${data.presets.length} profili e ${data.passions.length} passioni, con volumi e preferenze.`;
+    $("#backup-confirm").hidden = false;
+    $("#backup-restore").focus();
+  } catch (error) {
+    resetBackupImport();
+    $("#backup-message").textContent = error.message;
+  }
+});
+$("#backup-cancel").addEventListener("click", () => { resetBackupImport(); $("#backup-message").textContent = "Importazione annullata. I dati presenti sono stati mantenuti."; });
+$("#backup-restore").addEventListener("click", () => {
+  if (!pendingBackup) return;
+  try {
+    restoreBackup(pendingBackup);
+    resetBackupImport();
+    $("#backup-message").textContent = "Backup importato. Profili, passioni e preferenze sono pronti.";
+    $("#backup-import").focus();
+  } catch (e) { $("#backup-message").textContent = e.message; }
+});
 
 async function prepareSounds() {
   const loader = $("#sound-loader"), retry = $("#loader-retry"), progress = $("#loader-progress");

@@ -40,6 +40,10 @@
                                        Text="Accendi uno o più suoni e mescolali come preferisci." />
                         </StackPanel>
                     </StackPanel>
+                    <Button x:Name="BackupButton" Style="{StaticResource RoundButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,48,0"
+                            ToolTipService.ToolTip="Backup e ripristino" AutomationProperties.Name="Backup e ripristino" Click="BackupButton_Click">
+                        <FontIcon Glyph="&#xE74E;" FontSize="16" />
+                    </Button>
                     <Button x:Name="HelpButton" Style="{StaticResource RoundButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTipService.ToolTip="Come funziona" AutomationProperties.Name="Come funziona" Click="HelpButton_Click">
                         <FontIcon Glyph="&#xE897;" FontSize="16" />

@@ -70,6 +70,14 @@ offline; se il caricamento fallisce, «Riprova» riprende senza riscaricare i fi
 Nel pacchetto della release i suoni sono già dentro `sounds/`. Il sito su GitHub Pages si aggiorna da solo a ogni push
 su `main` che tocca `web/` o i suoni (workflow `.github/workflows/pages.yml`).
 
+## Backup tra web, Windows e Android
+
+Dal pulsante **Backup e ripristino** in alto puoi **esportare** profili, passioni, volumi e preferenze
+in un file JSON e **importarlo** su qualsiasi altra versione di Chiarella (dalla 1.9).
+Prima di sostituire i dati presenti viene mostrato un riepilogo e chiesta conferma.
+La riproduzione e il timer si fermano; i dati del backup non avviano automaticamente l'audio.
+Il file resta sul tuo dispositivo. [Formato e verifiche](docs/backup-format.md).
+
 ## I suoni e i loop
 
 Le registrazioni originali sono in `loop-chiarella/`. Vengono trasformate in loop infiniti senza

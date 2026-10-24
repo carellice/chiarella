@@ -188,12 +188,17 @@ public sealed class Mixer : IDisposable
             if (!Playing) Play();
         }
         if (_voices.Count == 0) StopAll();
-        else Changed?.Invoke();
+        else
+        {
+            _store.LastMix = _voices.Keys.ToDictionary(key => key, key => _store.Volume(key));
+            Changed?.Invoke();
+        }
     }
 
     public void SetVolume(string id, double volume)
     {
         _store.Volumes[id] = volume;
+        if (HasMix) _store.LastMix = _voices.Keys.ToDictionary(key => key, key => _store.Volume(key));
         if (_voices.TryGetValue(id, out var voice)) voice.FadeTo((float)volume, 0.08);
         PresetId = null;
         Changed?.Invoke();
@@ -235,6 +240,7 @@ public sealed class Mixer : IDisposable
     public void Play()
     {
         if (_voices.Count == 0) return;
+        _store.LastMix = _voices.Keys.ToDictionary(id => id, id => _store.Volume(id));
         EnsureOutput();
         Playing = true;
         _master.FadeTo(_fadingOut ? 0f : 1f, 0.6);
@@ -262,6 +268,13 @@ public sealed class Mixer : IDisposable
         PresetId = null;
         CancelTimer();
         Playing = false;
+        Changed?.Invoke();
+    }
+
+    public void ReloadFromStore()
+    {
+        StopAll();
+        _user.FadeTo(Perceptual(_store.MasterVolume), 0.08);
         Changed?.Invoke();
     }
 

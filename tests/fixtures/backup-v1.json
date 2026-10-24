@@ -1,0 +1,21 @@
+{
+  "format": "chiarella-backup",
+  "version": 1,
+  "exportedAt": "2026-10-24T10:00:00Z",
+  "data": {
+    "presets": [
+      { "id": "mix-1", "name": "Quiete 🌊 e pioggia", "mix": { "mare": 0.35, "pioggia_dolce": 0.8 } },
+      { "id": "mix-2", "name": "Falò e grilli", "mix": { "falo": 1, "grilli": 0 } }
+    ],
+    "passions": [
+      { "id": "passion-1", "category": "LETTURA", "detail": "L'amica geniale — un po’ di quiete" },
+      { "id": "passion-2", "category": "VIDEOGIOCHI", "detail": "Zelda" }
+    ],
+    "volumes": { "mare": 0.35, "pioggia_dolce": 0.8, "falo": 1, "grilli": 0, "future_sound": 0.5 },
+    "masterVolume": 0.65,
+    "lastMix": { "mare": 0.35, "pioggia_dolce": 0.8 },
+    "lastTimerMinutes": 45,
+    "onboardingDone": true,
+    "lastPassionId": "passion-2"
+  }
+}

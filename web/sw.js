@@ -1,7 +1,7 @@
 // I suoni sono precaricati dall'app, anche alla prima visita senza worker attivo.
-const CACHE = "chiarella-v2";
+const CACHE = "chiarella-v3";
 const SOUND_CACHE = "chiarella-audio-v1";
-const SHELL = ["./", "index.html", "style.css", "data.js", "app.js", "icon-512.png", "manifest.webmanifest"];
+const SHELL = ["./", "index.html", "style.css", "data.js", "backup.js", "app.js", "icon-512.png", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -55,6 +55,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -80,6 +81,7 @@ import it.chiarella.app.audio.Sounds
 import it.chiarella.app.data.Preset
 import it.chiarella.app.data.Store
 import it.chiarella.app.ui.components.AuroraBackground
+import it.chiarella.app.ui.components.BackupDialog
 import it.chiarella.app.ui.components.Equalizer
 import it.chiarella.app.ui.components.PlayerBar
 import it.chiarella.app.ui.components.PresetRow
@@ -116,6 +118,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
     var toDelete by remember { mutableStateOf<Preset?>(null) }
     var detailId by remember { mutableStateOf<String?>(null) }
     var showMaster by remember { mutableStateOf(false) }
+    var showBackup by remember { mutableStateOf(false) }
 
     // Permesso notifiche (Android 13+): chiesto la prima volta che parte la musica.
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -157,6 +160,7 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
             item(span = { GridItemSpan(maxLineSpan) }, key = "header") {
                 Header(
                     state, onShowGuide,
+                    onBackup = { showBackup = true },
                     onShowUpdates = {
                         if (update !is UpdateState.Available && update !is UpdateState.Downloading &&
                             update !is UpdateState.ReadyToInstall
@@ -255,6 +259,10 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
         )
     }
 
+    if (showBackup) {
+        BackupDialog(store, mixer, onDismiss = { showBackup = false })
+    }
+
     if (showMaster) {
         MasterVolumeSheet(state = state, onChange = mixer::setMasterVolume, onDismiss = { showMaster = false })
     }
@@ -312,6 +320,7 @@ private fun Header(
     state: Mixer.State,
     onShowGuide: () -> Unit,
     onShowUpdates: () -> Unit,
+    onBackup: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val greeting = remember {
@@ -326,6 +335,8 @@ private fun Header(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(greeting.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.TextMuted)
             Spacer(Modifier.weight(1f))
+            RoundIconButton(Icons.Rounded.SaveAlt, "Backup e ripristino", 38.dp, onBackup)
+            Spacer(Modifier.width(8.dp))
             RoundIconButton(Icons.Rounded.SystemUpdate, "Aggiornamenti", 38.dp, onShowUpdates)
             Spacer(Modifier.width(8.dp))
             RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, "Come funziona", 38.dp, onShowGuide)
