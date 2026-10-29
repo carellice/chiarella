@@ -148,6 +148,12 @@ class Mixer(private val context: Context, private val store: Store) {
         applyMix(preset.mix, preset.id)
     }
 
+    /** Accende esattamente questi suoni, ciascuno con il volume che aveva (usato dalla chat). */
+    fun playSounds(ids: List<String>) {
+        val s = _state.value
+        applyMix(ids.associateWith { id -> s.volumes[id]?.takeIf { it > 0.02f } ?: DEFAULT_VOLUME }, null)
+    }
+
     private fun applyMix(mix: Map<String, Float>, presetId: String?) {
         val valid = mix.filterKeys { Sounds[it] != null }
         if (valid.isEmpty()) return

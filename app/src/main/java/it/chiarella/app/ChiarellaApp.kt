@@ -2,6 +2,7 @@ package it.chiarella.app
 
 import android.app.Application
 import androidx.glance.appwidget.updateAll
+import it.chiarella.app.ai.AiChat
 import it.chiarella.app.audio.Mixer
 import it.chiarella.app.data.Store
 import it.chiarella.app.update.Updater
@@ -23,6 +24,8 @@ class ChiarellaApp : Application() {
         private set
     lateinit var updater: Updater
         private set
+    lateinit var ai: AiChat
+        private set
 
     private val scope = MainScope()
 
@@ -32,6 +35,7 @@ class ChiarellaApp : Application() {
         store = Store(this)
         mixer = Mixer(this, store)
         updater = Updater(this)
+        ai = AiChat(this, store, mixer)
 
         // Tiene il widget allineato con lo stato della riproduzione e con i profili.
         scope.launch {

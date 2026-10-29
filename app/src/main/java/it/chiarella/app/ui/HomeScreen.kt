@@ -100,7 +100,14 @@ import it.chiarella.app.ui.theme.Palette
 import java.util.Calendar
 
 @Composable
-fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> Unit, onRelax: () -> Unit) {
+fun HomeScreen(
+    mixer: Mixer,
+    store: Store,
+    updater: Updater,
+    onShowGuide: () -> Unit,
+    onRelax: () -> Unit,
+    onChat: () -> Unit,
+) {
     val context = LocalContext.current
     val state by mixer.state.collectAsStateWithLifecycle()
     val presets by store.presets.collectAsStateWithLifecycle()
@@ -172,6 +179,9 @@ fun HomeScreen(mixer: Mixer, store: Store, updater: Updater, onShowGuide: () -> 
             }
             item(span = { GridItemSpan(maxLineSpan) }, key = "relax") {
                 RelaxCard(onRelax, Modifier.introStep(intro.value, 1))
+            }
+            item(span = { GridItemSpan(maxLineSpan) }, key = "chat") {
+                ChatCard(onChat, Modifier.introStep(intro.value, 1))
             }
             if (showBanner) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "update") {

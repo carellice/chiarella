@@ -56,6 +56,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChiarellaTheme {
                 var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
+                // "Un momento per te" aperto dalla chat: alla chiusura si torna alla chat.
+                var relaxFromChat by rememberSaveable { mutableStateOf(false) }
                 AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
@@ -69,11 +71,31 @@ class MainActivity : ComponentActivity() {
                             app.store.onboardingDone = true
                             screen = Screen.HOME
                         })
-                        Screen.RELAX -> RelaxScreen(store = app.store, onClose = { screen = Screen.HOME })
+                        Screen.RELAX -> RelaxScreen(
+                            store = app.store,
+                            onClose = {
+                                screen = if (relaxFromChat) Screen.CHAT else Screen.HOME
+                                relaxFromChat = false
+                            },
+                            onChoice = { if (relaxFromChat) app.ai.sendEvent(it) },
+                            onTalk = if (relaxFromChat) null else ({ proposal ->
+                                app.ai.sendEvent(proposal)
+                                screen = Screen.CHAT
+                            }),
+                        )
+                        Screen.CHAT -> ChatScreen(
+                            ai = app.ai, mixer = app.mixer,
+                            onClose = { screen = Screen.HOME },
+                            onMoment = {
+                                relaxFromChat = true
+                                screen = Screen.RELAX
+                            },
+                        )
                         Screen.HOME -> HomeScreen(
                             mixer = app.mixer, store = app.store, updater = app.updater,
                             onShowGuide = { screen = Screen.GUIDE },
                             onRelax = { screen = Screen.RELAX },
+                            onChat = { screen = Screen.CHAT },
                         )
                     }
                 }
@@ -82,4 +104,4 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Screen { HOME, GUIDE, RELAX }
+private enum class Screen { HOME, GUIDE, RELAX, CHAT }

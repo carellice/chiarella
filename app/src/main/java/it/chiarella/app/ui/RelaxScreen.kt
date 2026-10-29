@@ -52,6 +52,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Forum
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -112,9 +113,17 @@ private const val BREATH_CYCLES = 4
 /**
  * "Un momento per te": l'utente sceglie le sue passioni, fa un breve esercizio di respirazione
  * e poi Chiarella gli propone cosa fare per rilassarsi.
+ *
+ * [onChoice] riceve la proposta accettata (per raccontarla alla chat); con [onTalk] compare
+ * il pulsante per parlarne con la chat.
  */
 @Composable
-fun RelaxScreen(store: Store, onClose: () -> Unit) {
+fun RelaxScreen(
+    store: Store,
+    onClose: () -> Unit,
+    onChoice: (String) -> Unit = {},
+    onTalk: ((String) -> Unit)? = null,
+) {
     val passions by store.passions.collectAsStateWithLifecycle()
     var step by rememberSaveable { mutableStateOf(if (passions.isEmpty()) RelaxStep.PASSIONS else RelaxStep.BREATHE) }
     var pickedId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -188,7 +197,13 @@ fun RelaxScreen(store: Store, onClose: () -> Unit) {
                             round = round,
                             onAnother = ::pick,
                             onBreatheAgain = { step = RelaxStep.BREATHE },
-                            onDone = onClose,
+                            onDone = { proposal ->
+                                onChoice("In \"Un momento per te\" mi è stato proposto: $proposal Ho deciso di farlo.")
+                                onClose()
+                            },
+                            onTalk = onTalk?.let { talk ->
+                                { proposal -> talk("In \"Un momento per te\" mi è stato proposto: $proposal Vorrei parlarne con te.") }
+                            },
                         )
                     }
                 }
@@ -408,7 +423,7 @@ private fun PassionBadge(category: PassionCategory, size: androidx.compose.ui.un
 // ------------------------------------------------------------------ respiro
 
 @Composable
-private fun BreathingExercise(onDone: () -> Unit) {
+internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     val haptic = LocalHapticFeedback.current
     val breath = remember { Animatable(0f) }
     var phase by remember { mutableStateOf<BreathPhase?>(null) }
@@ -510,7 +525,7 @@ private fun BreathingExercise(onDone: () -> Unit) {
             color = Palette.TextFaint,
             modifier = Modifier
                 .clip(CircleShape)
-                .clickable(onClick = onDone)
+                .clickable(onClick = onSkip)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         )
         Spacer(Modifier.height(12.dp))
@@ -579,7 +594,8 @@ private fun Reveal(
     round: Int,
     onAnother: () -> Unit,
     onBreatheAgain: () -> Unit,
-    onDone: () -> Unit,
+    onDone: (String) -> Unit,
+    onTalk: ((String) -> Unit)?,
 ) {
     val haptic = LocalHapticFeedback.current
     // Breve "rullo": le passioni scorrono rallentando, poi si ferma su quella scelta.
@@ -603,6 +619,7 @@ private fun Reveal(
     }
     val pop by animateFloatAsState(if (landed) 1f else 0f, spring(dampingRatio = 0.45f, stiffness = 260f), label = "pop")
     val ideaIndex = remember(round) { Random.nextInt(passion.category.ideas.size) }
+    val proposal = "${passion.title}. ${passion.category.idea(passion, ideaIndex)}"
 
     val transition = rememberInfiniteTransition(label = "reveal")
     val halo by transition.animateFloat(0.9f, 1.15f, infiniteRepeatable(tween(2400), RepeatMode.Reverse), label = "halo")
@@ -673,13 +690,17 @@ private fun Reveal(
             enter = fadeIn(tween(400, delayMillis = 350)) + slideInVertically(tween(400, delayMillis = 350)) { it / 2 },
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                GradientButton("Perfetto, lo faccio", Modifier.fillMaxWidth(), onClick = onDone)
+                GradientButton("Perfetto, lo faccio", Modifier.fillMaxWidth(), onClick = { onDone(proposal) })
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (all.size > 1) {
                         SecondaryAction("Un'altra idea", Icons.Rounded.Refresh, Modifier.weight(1f), onAnother)
                     }
                     SecondaryAction("Respira ancora", null, Modifier.weight(1f), onBreatheAgain)
+                }
+                if (onTalk != null) {
+                    Spacer(Modifier.height(10.dp))
+                    SecondaryAction("Parlane con Chiarella", Icons.Rounded.Forum, Modifier.fillMaxWidth()) { onTalk(proposal) }
                 }
                 Spacer(Modifier.height(16.dp))
             }

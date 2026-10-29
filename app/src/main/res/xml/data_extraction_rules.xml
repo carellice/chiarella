@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup su cloud e trasferimento tra dispositivi (Android 12+): le credenziali e la chat con l'IA restano solo sul telefono. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="chiarella_ai.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="chiarella_ai.xml" />
+    </device-transfer>
+</data-extraction-rules>
