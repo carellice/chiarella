@@ -34,6 +34,8 @@ data class ChatMessage(
     val role: Role,
     /** Testo così come arriva dal modello (con le eventuali azioni tra doppie quadre). */
     val content: String,
+    /** Messaggio dell'utente nato da un vocale: [content] è la trascrizione. */
+    val voice: Boolean = false,
 ) {
     /**
      * USER: scritto dall'utente. ASSISTANT: risposta dell'IA. EVENT: qualcosa che l'utente
@@ -95,6 +97,10 @@ class AiChat(context: Context, private val store: Store, private val mixer: Mixe
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
+    /** Un vocale è in trascrizione. */
+    private val _transcribing = MutableStateFlow(false)
+    val transcribing: StateFlow<Boolean> = _transcribing.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -132,6 +138,30 @@ class AiChat(context: Context, private val store: Store, private val mixer: Mixe
         reply()
     }
 
+    /**
+     * Messaggio vocale: l'audio (WAV) viene trascritto da Whisper su Cloudflare Workers AI
+     * e la trascrizione parte come un normale messaggio, segnato come vocale.
+     */
+    fun sendVoice(wav: ByteArray) {
+        val cfg = _config.value
+        if (!cfg.ready || _busy.value || _transcribing.value) return
+        _error.value = null
+        _transcribing.value = true
+        job = scope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { transcribe(cfg, wav) } }
+            _transcribing.value = false
+            result.onSuccess { text ->
+                if (text.isBlank()) _error.value = "Non ho sentito parole nel vocale. Riprova parlando un po' più vicino al telefono."
+                else {
+                    append(ChatMessage(UUID.randomUUID().toString(), ChatMessage.Role.USER, text, voice = true))
+                    reply()
+                }
+            }.onFailure { e ->
+                if (e !is kotlinx.coroutines.CancellationException) _error.value = e.message ?: "Non sono riuscita a trascrivere il vocale."
+            }
+        }
+    }
+
     /** Un gesto fatto nell'app (respiro finito, suoni accesi…): l'assistente ne tiene conto e prosegue. */
     fun sendEvent(text: String, answer: Boolean = true) {
         append(ChatMessage(UUID.randomUUID().toString(), ChatMessage.Role.EVENT, text))
@@ -162,6 +192,7 @@ class AiChat(context: Context, private val store: Store, private val mixer: Mixe
         job?.cancel()
         job = null
         _busy.value = false
+        _transcribing.value = false
     }
 
     /** Esegue un'azione proposta dall'assistente che non richiede di cambiare schermata. */
@@ -204,7 +235,7 @@ class AiChat(context: Context, private val store: Store, private val mixer: Mixe
         // Solo gli ultimi messaggi: bastano per il filo del discorso e la richiesta resta leggera.
         _messages.value.takeLast(MAX_HISTORY).forEach { m ->
             val (role, content) = when (m.role) {
-                ChatMessage.Role.USER -> "user" to m.content
+                ChatMessage.Role.USER -> "user" to if (m.voice) "(messaggio vocale trascritto) ${m.content}" else m.content
                 ChatMessage.Role.ASSISTANT -> "assistant" to m.content
                 ChatMessage.Role.EVENT -> "user" to "[Nota dall'app: ${m.content}]"
             }
@@ -308,6 +339,36 @@ Le note tra parentesi quadre che iniziano con "Nota dall'app" descrivono cosa la
         }
     }
 
+    private fun transcribe(cfg: AiConfig, wav: ByteArray): String {
+        val url = URL("https://api.cloudflare.com/client/v4/accounts/${cfg.accountId}/ai/run/$WHISPER")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 15_000
+            readTimeout = 90_000
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer ${cfg.token}")
+            setRequestProperty("Content-Type", "application/json")
+        }
+        try {
+            val body = JSONObject()
+                .put("audio", android.util.Base64.encodeToString(wav, android.util.Base64.NO_WRAP))
+                .put("language", "it")
+                .put("task", "transcribe")
+                .put("vad_filter", true)
+            conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            val code = try {
+                conn.responseCode
+            } catch (e: IOException) {
+                throw IOException("Nessuna connessione. Controlla internet e riprova.", e)
+            }
+            if (code !in 200..299) throw IOException(describeError(code, conn.errorStream?.bufferedReader()?.readText()))
+            val raw = conn.inputStream.bufferedReader().readText()
+            return JSONObject(raw).optJSONObject("result")?.optString("text").orEmpty().trim()
+        } finally {
+            conn.disconnect()
+        }
+    }
+
     private fun describeError(code: Int, raw: String?): String {
         val detail = runCatching { JSONObject(raw ?: "").getJSONArray("errors").getJSONObject(0).optString("message") }.getOrNull()
         return when {
@@ -324,7 +385,7 @@ Le note tra parentesi quadre che iniziano con "Nota dall'app" descrivono cosa la
     private fun save() {
         val arr = JSONArray()
         _messages.value.takeLast(MAX_SAVED).forEach {
-            arr.put(JSONObject().put("id", it.id).put("role", it.role.name).put("content", it.content))
+            arr.put(JSONObject().put("id", it.id).put("role", it.role.name).put("content", it.content).put("voice", it.voice))
         }
         prefs.edit().putString(KEY_MESSAGES, arr.toString()).apply()
     }
@@ -333,7 +394,7 @@ Le note tra parentesi quadre che iniziano con "Nota dall'app" descrivono cosa la
         val arr = JSONArray(prefs.getString(KEY_MESSAGES, null) ?: return emptyList())
         List(arr.length()) { i ->
             val o = arr.getJSONObject(i)
-            ChatMessage(o.getString("id"), ChatMessage.Role.valueOf(o.getString("role")), o.getString("content"))
+            ChatMessage(o.getString("id"), ChatMessage.Role.valueOf(o.getString("role")), o.getString("content"), o.optBoolean("voice"))
         }
     }.getOrDefault(emptyList())
 
@@ -347,6 +408,7 @@ Le note tra parentesi quadre che iniziano con "Nota dall'app" descrivono cosa la
         private const val KEY_MESSAGES = "messages"
         private const val MAX_HISTORY = 24
         private const val MAX_SAVED = 80
+        private const val WHISPER = "@cf/openai/whisper-large-v3-turbo"
 
         val MODELS = listOf(
             Model("@cf/meta/llama-3.3-70b-instruct-fp8-fast", "Llama 3.3 70B", "Più attento e naturale"),

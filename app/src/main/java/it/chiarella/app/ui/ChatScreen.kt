@@ -1,5 +1,20 @@
 package it.chiarella.app.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import it.chiarella.app.ai.VoiceRecorder
+import it.chiarella.app.ui.components.formatCountdown
+import kotlinx.coroutines.delay
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -128,9 +143,11 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
     val messages by ai.messages.collectAsStateWithLifecycle()
     val busy by ai.busy.collectAsStateWithLifecycle()
     val error by ai.error.collectAsStateWithLifecycle()
+    val transcribing by ai.transcribing.collectAsStateWithLifecycle()
     val mix by mixer.state.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(if (config.ready) ChatMode.CHAT else ChatMode.SETUP) }
     var confirmReset by remember { mutableStateOf(false) }
+    var resumeAfterVoice by remember { mutableStateOf(false) }
 
     BackHandler {
         when {
@@ -216,9 +233,21 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
                     ChatMode.CHAT -> Conversation(
                         messages = messages,
                         busy = busy,
+                        transcribing = transcribing,
                         error = error,
                         mix = mix,
                         onSend = ai::send,
+                        onVoice = ai::sendVoice,
+                        // Mentre parli i suoni si fermano, così il microfono sente solo la tua voce.
+                        onRecording = { recording ->
+                            if (recording && mix.playing) {
+                                resumeAfterVoice = true
+                                mixer.pause()
+                            } else if (!recording && resumeAfterVoice) {
+                                resumeAfterVoice = false
+                                mixer.play()
+                            }
+                        },
                         onStop = ai::stop,
                         onRetry = ai::retry,
                         onAction = { action ->
@@ -260,9 +289,12 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
 private fun Conversation(
     messages: List<ChatMessage>,
     busy: Boolean,
+    transcribing: Boolean,
     error: String?,
     mix: Mixer.State,
     onSend: (String) -> Unit,
+    onVoice: (ByteArray) -> Unit,
+    onRecording: (Boolean) -> Unit,
     onStop: () -> Unit,
     onRetry: () -> Unit,
     onAction: (ChatAction) -> Unit,
@@ -272,9 +304,62 @@ private fun Conversation(
     val list = rememberLazyListState()
     val last = messages.lastOrNull()
     val waiting = busy && (last == null || last.role != ChatMessage.Role.ASSISTANT || last.text.isEmpty())
+    val context = LocalContext.current
+    val recorder = remember { VoiceRecorder() }
+    var recording by remember { mutableStateOf(false) }
+    var micMessage by remember { mutableStateOf<String?>(null) }
+
+    fun startRecording() {
+        micMessage = null
+        onRecording(true)
+        if (recorder.start()) {
+            recording = true
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        } else {
+            onRecording(false)
+            micMessage = "Il microfono non è disponibile in questo momento."
+        }
+    }
+
+    fun finishRecording(send: Boolean) {
+        if (!recording) return
+        recording = false
+        val wav = recorder.stop()
+        onRecording(false)
+        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        when {
+            !send -> Unit
+            wav == null -> micMessage = "Vocale troppo corto: tocca il microfono, parla e poi tocca invia."
+            else -> onVoice(wav)
+        }
+    }
+
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) startRecording()
+        else micMessage = "Per i vocali serve il permesso del microfono. Puoi darlo dalle impostazioni di Android."
+    }
+
+    fun onMic() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) startRecording()
+        else micPermission.launch(Manifest.permission.RECORD_AUDIO)
+    }
+
+    // Arrivata al limite, la registrazione parte da sola. Uscendo dalla chat, si scarta.
+    val elapsed by recorder.elapsed.collectAsStateWithLifecycle()
+    LaunchedEffect(recording, elapsed) {
+        if (recording && elapsed >= VoiceRecorder.MAX_SECONDS * 1000L) finishRecording(send = true)
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            if (recorder.isRecording) {
+                recorder.cancel()
+                onRecording(false)
+            }
+        }
+    }
 
     // Segue la risposta mentre arriva, finché l'utente non torna indietro a rileggere.
-    LaunchedEffect(messages.size, last?.content?.length, waiting, error) {
+    LaunchedEffect(messages.size, last?.content?.length, waiting, error, transcribing) {
         val count = list.layoutInfo.totalItemsCount
         if (count > 0) list.animateScrollToItem(count - 1)
     }
@@ -299,7 +384,7 @@ private fun Conversation(
             items(messages, key = { it.id }) { m ->
                 Box(Modifier.animateItem()) {
                     when (m.role) {
-                        ChatMessage.Role.USER -> UserBubble(m.text)
+                        ChatMessage.Role.USER -> UserBubble(m.text, m.voice)
                         ChatMessage.Role.EVENT -> EventNote(m.content)
                         ChatMessage.Role.ASSISTANT -> AssistantBubble(
                             message = m,
@@ -311,53 +396,196 @@ private fun Conversation(
                     }
                 }
             }
+            if (transcribing) item(key = "transcribing") { TranscribingBubble(Modifier.animateItem()) }
             if (waiting) item(key = "typing") { TypingBubble(Modifier.animateItem()) }
             if (error != null && !busy) item(key = "error") { ErrorCard(error, onRetry, Modifier.animateItem()) }
         }
 
+        AnimatedVisibility(micMessage != null) {
+            Text(
+                micMessage.orEmpty(),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFFF9AA9),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { micMessage = null }
+                    .padding(horizontal = 22.dp, vertical = 4.dp),
+            )
+        }
         Row(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            OutlinedTextField(
-                value = draft,
-                onValueChange = { draft = it.take(2000) },
-                placeholder = { Text("Scrivi cosa ti passa per la testa…", color = Palette.TextFaint) },
-                maxLines = 5,
-                shape = RoundedCornerShape(26.dp),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Palette.Lavender,
-                    unfocusedBorderColor = Palette.GlassBorder,
-                    focusedContainerColor = Palette.Surface.copy(alpha = 0.85f),
-                    unfocusedContainerColor = Palette.Surface.copy(alpha = 0.7f),
-                    cursorColor = Palette.Lavender,
-                ),
+            AnimatedContent(
+                targetState = recording,
+                transitionSpec = { (fadeIn(tween(250)) + scaleIn(tween(250), initialScale = 0.96f)) togetherWith fadeOut(tween(150)) },
                 modifier = Modifier.weight(1f),
-            )
+                label = "inputMode",
+            ) { rec ->
+                if (rec) {
+                    RecordingBar(recorder, onCancel = { finishRecording(send = false) })
+                } else {
+                    OutlinedTextField(
+                        value = draft,
+                        onValueChange = { draft = it.take(2000) },
+                        placeholder = { Text("Scrivi o manda un vocale…", color = Palette.TextFaint) },
+                        maxLines = 5,
+                        shape = RoundedCornerShape(26.dp),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Palette.Lavender,
+                            unfocusedBorderColor = Palette.GlassBorder,
+                            focusedContainerColor = Palette.Surface.copy(alpha = 0.85f),
+                            unfocusedContainerColor = Palette.Surface.copy(alpha = 0.7f),
+                            cursorColor = Palette.Lavender,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
             Spacer(Modifier.width(10.dp))
-            val canSend = draft.isNotBlank() || busy
-            val bg by animateColorAsState(if (canSend) Palette.Lavender else Color.White.copy(alpha = 0.08f), tween(250), label = "sendBg")
+            // Un solo pulsante: invia il testo, ferma la risposta, avvia o invia il vocale.
+            val mode = when {
+                busy || transcribing -> SendMode.STOP
+                recording || draft.isNotBlank() -> SendMode.SEND
+                else -> SendMode.MIC
+            }
+            val level by recorder.level.collectAsStateWithLifecycle()
+            val pulse by animateFloatAsState(
+                if (recording) 1f + level * 0.35f else 1f, spring(dampingRatio = 0.5f, stiffness = 600f), label = "micPulse",
+            )
+            val bg by animateColorAsState(
+                if (mode == SendMode.MIC) Color.White.copy(alpha = 0.1f) else Palette.Lavender, tween(250), label = "sendBg",
+            )
             Box(
                 Modifier
                     .padding(bottom = 4.dp)
                     .size(52.dp)
+                    .graphicsLayer { scaleX = pulse; scaleY = pulse }
                     .clip(CircleShape)
                     .background(bg)
-                    .clickable(enabled = canSend) { if (busy) onStop() else send() },
+                    .clickable {
+                        when {
+                            mode == SendMode.STOP -> onStop()
+                            recording -> finishRecording(send = true)
+                            mode == SendMode.SEND -> send()
+                            else -> onMic()
+                        }
+                    },
                 contentAlignment = Alignment.Center,
             ) {
-                AnimatedContent(busy, transitionSpec = { scaleIn() togetherWith scaleOut() }, label = "sendIcon") { b ->
+                AnimatedContent(mode, transitionSpec = { scaleIn() togetherWith scaleOut() }, label = "sendIcon") { m ->
                     Icon(
-                        if (b) Icons.Rounded.Stop else Icons.AutoMirrored.Rounded.Send,
-                        if (b) "Ferma la risposta" else "Invia",
-                        tint = Color.White.copy(alpha = if (canSend) 1f else 0.4f),
+                        when (m) {
+                            SendMode.STOP -> Icons.Rounded.Stop
+                            SendMode.SEND -> Icons.AutoMirrored.Rounded.Send
+                            SendMode.MIC -> Icons.Rounded.Mic
+                        },
+                        when (m) {
+                            SendMode.STOP -> "Ferma la risposta"
+                            SendMode.SEND -> if (recording) "Invia il vocale" else "Invia"
+                            SendMode.MIC -> "Registra un vocale"
+                        },
+                        tint = Color.White,
                         modifier = Modifier.size(22.dp),
                     )
                 }
             }
+        }
+    }
+}
+
+private enum class SendMode { MIC, SEND, STOP }
+
+private const val BARS = 28
+
+/** Barra di registrazione: puntino rosso, durata, onde che seguono la voce e cestino per annullare. */
+@Composable
+private fun RecordingBar(recorder: VoiceRecorder, onCancel: () -> Unit) {
+    val level by recorder.level.collectAsStateWithLifecycle()
+    val elapsed by recorder.elapsed.collectAsStateWithLifecycle()
+    // Storico dei livelli: le onde scorrono da destra a sinistra.
+    val history = remember { mutableStateListOf<Float>().apply { repeat(BARS) { add(0f) } } }
+    LaunchedEffect(Unit) {
+        while (true) {
+            history.removeAt(0)
+            history.add(recorder.level.value)
+            delay(70)
+        }
+    }
+    val transition = rememberInfiniteTransition(label = "rec")
+    val blink by transition.animateFloat(0.35f, 1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "recBlink")
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Palette.Surface.copy(alpha = 0.85f))
+            .border(1.dp, Palette.Lavender.copy(alpha = 0.4f + 0.4f * level), RoundedCornerShape(28.dp))
+            .padding(start = 6.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onCancel),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.Delete, "Annulla il vocale", tint = Palette.TextMuted, modifier = Modifier.size(20.dp))
+        }
+        Box(
+            Modifier
+                .size(10.dp)
+                .graphicsLayer { alpha = blink }
+                .clip(CircleShape)
+                .background(Color(0xFFFF5C7A))
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            formatCountdown(elapsed),
+            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+            color = Palette.Text,
+        )
+        Spacer(Modifier.width(12.dp))
+        Canvas(Modifier.weight(1f).height(32.dp)) {
+            val gap = size.width / (BARS * 2f)
+            val brush = Brush.verticalGradient(listOf(Palette.Sky, Palette.Lavender))
+            history.forEachIndexed { i, v ->
+                val h = (size.height * (0.12f + 0.88f * v)).coerceAtMost(size.height)
+                drawRoundRect(
+                    brush = brush,
+                    topLeft = androidx.compose.ui.geometry.Offset(i * gap * 2 + gap / 2, (size.height - h) / 2),
+                    size = androidx.compose.ui.geometry.Size(gap, h),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(gap / 2),
+                    alpha = 0.35f + 0.65f * (i + 1f) / BARS,
+                )
+            }
+        }
+    }
+}
+
+/** In attesa della trascrizione del vocale. */
+@Composable
+private fun TranscribingBubble(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "transcribing")
+    val t by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1400)), label = "transcribingT")
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp))
+                .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.55f), Palette.Sky.copy(alpha = 0.4f))))
+                .padding(horizontal = 16.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.GraphicEq, null, tint = Color.White,
+                modifier = Modifier.size(18.dp).graphicsLayer { alpha = 0.5f + 0.5f * sin(t * 2 * PI).toFloat() },
+            )
+            Spacer(Modifier.width(8.dp))
+            Text("Trascrivo il vocale…", style = MaterialTheme.typography.bodyMedium, color = Color.White)
         }
     }
 }
@@ -444,18 +672,25 @@ private fun Orb(size: androidx.compose.ui.unit.Dp) {
 }
 
 @Composable
-private fun UserBubble(text: String) {
+private fun UserBubble(text: String, voice: Boolean) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.White,
-            modifier = Modifier
+        Column(
+            Modifier
                 .padding(start = 48.dp)
                 .clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp))
                 .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.9f), Palette.Sky.copy(alpha = 0.75f))))
                 .padding(horizontal = 16.dp, vertical = 11.dp),
-        )
+        ) {
+            if (voice) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Mic, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Vocale", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f))
+                }
+                Spacer(Modifier.height(2.dp))
+            }
+            Text(text, style = MaterialTheme.typography.bodyLarge, color = Color.White)
+        }
     }
 }
 
