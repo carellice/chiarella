@@ -22,9 +22,9 @@ import kotlin.math.sin
  * il testimone: poco prima della fine parte il secondo dall'inizio e i due si incrociano con una
  * dissolvenza a potenza costante. Qualsiasi imperfezione di decodifica in coda cade a volume zero.
  */
-internal class LoopVoice(context: Context, @RawRes res: Int) {
+internal class LoopVoice(context: Context, @RawRes res: Int, private val seamless: Boolean = false) {
 
-    private val players = Array(2) { createPlayer(context, res) }
+    private val players = Array(if (seamless) 1 else 2) { createPlayer(context, res) }
     private var current = 0
     private var crossfading = false
 
@@ -44,6 +44,11 @@ internal class LoopVoice(context: Context, @RawRes res: Int) {
 
     /** Applica volumi e passaggi di testimone. Restituisce fra quanti ms serve la prossima chiamata. */
     fun update(): Long {
+        // Un loop già pronto si ripete integralmente, senza sovrapporre la coda all'inizio.
+        if (seamless) {
+            players[0].volume = level
+            return IDLE_POLL_MS
+        }
         val a = players[current]
         val b = players[1 - current]
         val duration = a.duration
@@ -96,7 +101,7 @@ internal class LoopVoice(context: Context, @RawRes res: Int) {
             .build()
             .apply {
                 setMediaItem(MediaItem.fromUri(Uri.parse("android.resource://${context.packageName}/$res")))
-                repeatMode = Player.REPEAT_MODE_OFF
+                repeatMode = if (seamless) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                 volume = 0f
                 prepare()
             }

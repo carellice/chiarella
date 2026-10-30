@@ -1,4 +1,5 @@
 using Chiarella.Data;
+using Chiarella.Audio;
 using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
@@ -42,6 +43,7 @@ public sealed class RelaxView : Grid
     // Respiro
     private double _breath;
     private Func<double>? _breathAnim;
+    private BreathAudio? _breathAudio;
     private readonly Canvas _flower = new() { Width = 340, Height = 340, IsHitTestVisible = false };
     private readonly Ellipse _flowerHalo = new();
     private readonly Ellipse[] _petals = new Ellipse[6];
@@ -85,6 +87,7 @@ public sealed class RelaxView : Grid
 
     private void Close()
     {
+        StopBreathAudio();
         _run++;
         AuroraColors = [];
         Visibility = Visibility.Collapsed;
@@ -93,6 +96,7 @@ public sealed class RelaxView : Grid
 
     private void Show(Step step)
     {
+        StopBreathAudio();
         _run++;
         _step = step;
         _breathAnim = null;
@@ -107,6 +111,12 @@ public sealed class RelaxView : Grid
         AuroraColors = step == Step.Breathe ? [Catalog.Hex("#5B8DEF"), Catalog.Hex("#8B7CF6"), Catalog.Hex("#14B8A6")] : [];
         _host.Children.Add(view);
         Anim.Rise(view, 80, 20);
+    }
+
+    private void StopBreathAudio()
+    {
+        _breathAudio?.Dispose();
+        _breathAudio = null;
     }
 
     // ------------------------------------------------------------------ passioni
@@ -282,6 +292,9 @@ public sealed class RelaxView : Grid
 
     private UIElement BuildBreathe()
     {
+        // Un dispositivo audio non disponibile non impedisce l'esercizio visivo.
+        try { _breathAudio = new BreathAudio(); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
         var root = new Grid { Padding = new Thickness(24, 0, 24, 16) };
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         root.RowDefinitions.Add(new RowDefinition());
@@ -347,6 +360,8 @@ public sealed class RelaxView : Grid
             dots[c].Background = new SolidColorBrush(Color.FromArgb(0xC8, 255, 255, 255));
             foreach (var (label, hint, seconds, to) in Breath)
             {
+                _breathAudio?.Stop();
+                if (to is not null) _breathAudio?.Play(to == 1, _store.MasterVolume);
                 setPhase(label, hint);
                 if (to is { } target)
                 {
@@ -369,6 +384,7 @@ public sealed class RelaxView : Grid
             }
         }
         _breathAnim = null;
+        _breathAudio?.Stop();
         await Task.Delay(400);
         if (Alive()) Pick();
     }

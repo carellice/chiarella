@@ -26,7 +26,7 @@ Dall'[ultima release](https://github.com/carellice/chiarella/releases/latest):
 
 ## Funzioni
 
-- **11 suoni** in loop continuo, da accendere insieme e mescolare liberamente
+- **12 suoni** in loop continuo, inclusa una candela che scoppietta, da accendere insieme e mescolare liberamente
 - **Volume generale**: dal pulsante con l'altoparlante nella barra in basso alzi o abbassi tutta l'app insieme, senza toccare i volumi dei singoli suoni (né dei profili); il pannello mostra anche come esce davvero ogni suono acceso
 - **Volume per ogni suono**, con slider dedicato, dissolvenze morbide e feedback aptico
 - **Dettaglio del suono**: tieni premuta una card (clic destro su Windows e sul web) e si apre una finestra animata con lo stato del suono (acceso/spento), il volume sempre regolabile, una descrizione, i momenti ideali (dormire, concentrarsi, rilassarsi) e i suoni con cui si abbina bene, da aggiungere con un tocco
@@ -64,7 +64,7 @@ dalla cartella del progetto e apri `/web/` (i suoni vengono presi da `app/src/ma
 python -m http.server 8765
 ```
 
-All'apertura una schermata mostra l'avanzamento del caricamento degli 11 suoni e rende disponibile l'interfaccia
+All'apertura una schermata mostra l'avanzamento del caricamento dei 12 suoni e rende disponibile l'interfaccia
 quando tutti i file sono pronti. I suoni vengono conservati nella cache del browser per gli accessi successivi e l'uso
 offline; se il caricamento fallisce, «Riprova» riprende senza riscaricare i file già pronti.
 
@@ -107,6 +107,12 @@ cd scripts/loops && python process.py ../../loop-chiarella ../../app/src/main/re
 Il falò usa la nuova registrazione `loop-chiarella/falo nuovo.wav` (circa 89 s), con precedenza
 sul vecchio WAV di 3 s. Per rigenerare soltanto questo suono aggiungi `--only falo` al comando;
 il loop mantiene la registrazione originale con una dissolvenza alla giuntura.
+
+La candela usa `loop-chiarella/suono candela.wav` e si rigenera con `--only candela`.
+È già preparata come loop: viene soltanto convertita in Vorbis, conservando durata, volume e giuntura originali.
+I segnali in `suoni-respirazione/` sono esportati in `res/raw/respiro_inspira.ogg` e
+`res/raw/respiro_espira.ogg`: vengono riprodotti una volta all'inizio di ogni inspirazione
+ed espirazione del respiro guidato, anche nella chat Android. La fase di trattenimento resta silenziosa.
 
 Nomi, descrizioni, icone e colori dei suoni sono in
 `app/src/main/java/it/chiarella/app/audio/Sounds.kt`; profili e preferenze in `data/Store.kt`. Icona, splash e logo bianco si rigenerano con `scripts/gen_icon.py` a partire da `branding/chiarella_logo.png`.

@@ -723,6 +723,33 @@ function frame(t) {
 
 const relax = { selected: null, breath: 0, breathRun: 0, picked: null };
 
+const breathCues = {
+  source: null,
+  run: 0,
+  async prepare() {
+    audio.ensure();
+    await audio.ctx.resume();
+    await Promise.all([audio.load("respiro_inspira"), audio.load("respiro_espira")]);
+  },
+  play(inhaling) {
+    this.stop();
+    const run = this.run;
+    const buffer = audio.buffers.get(inhaling ? "respiro_inspira" : "respiro_espira");
+    if (!buffer) return;
+    // I buffer sono già pronti prima del conto alla rovescia.
+    buffer.then((decoded) => {
+      if (run !== this.run || document.hidden || $("#step-breathe").hidden) return;
+      const source = audio.ctx.createBufferSource();
+      source.buffer = decoded;
+      source.connect(audio.user);
+      this.source = source;
+      source.onended = () => { source.disconnect(); if (this.source === source) this.source = null; };
+      source.start();
+    }).catch(() => {});
+  },
+  stop() { this.run++; if (this.source) { this.source.stop(); this.source = null; } },
+};
+
 function savePassions() { store.set("passions", state.passions); }
 
 function openRelax() {
@@ -733,6 +760,7 @@ function openRelax() {
 }
 
 function closeRelax() {
+  breathCues.stop();
   relax.breathRun++;
   aurora.override = null;
   $("#relax").hidden = true;
@@ -741,6 +769,7 @@ function closeRelax() {
 }
 
 function showStep(step) {
+  breathCues.stop();
   ["passions", "breathe", "reveal"].forEach((s) => { $("#step-" + s).hidden = s !== step; });
   $("#relax-edit").style.visibility = step === "passions" ? "hidden" : "visible";
   relax.breathRun++;
@@ -800,6 +829,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function runBreathing() {
   const run = relax.breathRun;
   const alive = () => run === relax.breathRun;
+  await breathCues.prepare().catch(() => {});
+  if (!alive()) return;
   const phaseEl = $("#phase"), countEl = $("#count"), dots = [...$("#dots").children];
   const setPhase = (label, hint) => {
     phaseEl.innerHTML = `<strong>${label}</strong><small>${hint}</small>`;
@@ -812,6 +843,8 @@ async function runBreathing() {
   for (let c = 0; c < BREATH_CYCLES; c++) {
     dots[c].classList.add("done");
     for (const ph of BREATH) {
+      breathCues.stop();
+      if (ph.to != null) breathCues.play(ph.to === 1);
       setPhase(ph.label, ph.hint);
       if (navigator.vibrate) navigator.vibrate(15);
       const from = relax.breath, start = performance.now(), dur = ph.seconds * 1000;
@@ -825,6 +858,7 @@ async function runBreathing() {
     }
   }
   relax.animate = null;
+  breathCues.stop();
   await sleep(400);
   if (alive()) pick();
 }
@@ -902,11 +936,16 @@ $("#btn-relax").addEventListener("click", openRelax);
 $("#relax-close").addEventListener("click", closeRelax);
 $("#relax-edit").addEventListener("click", () => showStep("passions"));
 $("#btn-start-breath").addEventListener("click", () => showStep("breathe"));
-$("#btn-skip").addEventListener("click", () => { relax.breathRun++; pick(); });
+$("#btn-skip").addEventListener("click", () => { breathCues.stop(); relax.breathRun++; pick(); });
 $("#btn-done").addEventListener("click", closeRelax);
 $("#btn-another").addEventListener("click", pick);
 $("#btn-again").addEventListener("click", () => showStep("breathe"));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#relax").hidden && !document.querySelector("dialog[open]")) closeRelax(); });
+document.addEventListener("visibilitychange", () => {
+  if ($("#relax").hidden || $("#step-breathe").hidden) return;
+  if (document.hidden) { breathCues.stop(); relax.breathRun++; }
+  else showStep("breathe");
+});
 
 // ------------------------------------------------------------------ volume generale
 
@@ -1159,6 +1198,8 @@ async function prepareSounds() {
     return;
   }
   soundsReady = true;
+  // Conserva anche i due segnali per un successivo esercizio offline.
+  Promise.allSettled([audio.download("respiro_inspira"), audio.download("respiro_espira")]);
   $("#home").inert = false;
   $("#home").setAttribute("aria-busy", "false");
   document.body.classList.remove("loading-sounds");

@@ -34,6 +34,9 @@ def main():
     print(f"{'suono':16} {'giuntura: livello':>18} {'timbro':>7}   {'esito':>18}")
     worst = 0.0
     for f in sorted(Path(sys.argv[1]).glob("*.ogg")):
+        # Questi segnali sono riprodotti una sola volta, non sono loop ambientali.
+        if f.stem in ("respiro_inspira", "respiro_espira"):
+            continue
         x = decode(f).mean(axis=1)
         # Rotazione: la giuntura finisce a metà file, sul bordo di una finestra.
         half = (len(x) // 2 // W) * W

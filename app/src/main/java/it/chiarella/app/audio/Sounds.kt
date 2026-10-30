@@ -53,6 +53,8 @@ object Sounds {
             Icons.Rounded.Kayaking, Color(0xFF3B82F6), Color(0xFFA5D8FF), Ambience.RIPPLE),
         Sound("falo", "Falò", "Legna che scoppietta", R.raw.falo,
             Icons.Rounded.LocalFireDepartment, Color(0xFFF97316), Color(0xFFFFD166), Ambience.EMBERS),
+        Sound("candela", "Candela", "Una fiamma che scoppietta", R.raw.candela,
+            Icons.Rounded.LocalFireDepartment, Color(0xFFE9A64A), Color(0xFFFFE6A7), Ambience.HEAT),
         Sound("vento", "Vento", "Brezza tra i rami", R.raw.vento,
             Icons.Rounded.Air, Color(0xFF94A3B8), Color(0xFFE2E8F0), Ambience.WIND),
         Sound("grilli", "Grilli di notte", "Notte d'estate", R.raw.grilli,
@@ -109,6 +111,10 @@ object SoundInfos {
         "falo" to SoundInfo(
             "Legna che scoppietta e brace che crepita: il calore di un fuoco acceso, anche in città.",
             listOf(Mood.RELAX, Mood.SLEEP), listOf("grilli", "temporale", "pioggia_dolce"),
+        ),
+        "candela" to SoundInfo(
+            "Il crepitio delicato di una candela accesa: piccoli scoppiettii per un'atmosfera intima e tranquilla.",
+            listOf(Mood.RELAX, Mood.SLEEP), listOf("pioggia_dolce", "grilli", "vento"),
         ),
         "vento" to SoundInfo(
             "Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.",

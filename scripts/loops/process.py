@@ -30,6 +30,7 @@ RNG = np.random.default_rng(20261020)
 NAMES = {
     "Asciugacapelli": "phon",
     "Cascata": "cascata",
+    "suono candela.wav": "candela",
     "Falo'": "falo",
     "Fiume": "fiume",
     "Foresta": "foresta",
@@ -43,6 +44,9 @@ NAMES = {
 
 # Le nuove registrazioni hanno precedenza sui vecchi WAV, conservati come sorgenti.
 SOURCE_OVERRIDES = {"falo": "falo nuovo.wav"}
+
+# Registrazioni già preparate dall'utente: conserva durata, ordine e giuntura originali.
+READY_LOOPS = {"candela"}
 
 # ------------------------------------------------------------------ analisi a frame
 
@@ -219,22 +223,25 @@ def main():
         tmp = Path(td)
         for name, f in sources.items():
             decoded = decode(f)
-            if len(decoded) / SR < 20 and name in SHORT:
+            if name in READY_LOOPS:
+                y, how = decoded, "loop originale, sola conversione Vorbis"
+            elif len(decoded) / SR < 20 and name in SHORT:
                 y, how = granular_loop(f, *SHORT[name])
             else:
                 y, how = seal_loop(decoded)
 
-            # Loudness: misura, calcola il guadagno e limita solo il necessario.
-            write_wav(tmp / "m.wav", y)
-            lufs, tp = loudness(tmp / "m.wav")
-            gain = TARGET_LUFS - lufs
-            over = tp + gain - CEILING_DBTP
-            if over > MAX_LIMIT_DB:
-                gain -= over - MAX_LIMIT_DB
-            ceiling = 10 ** ((CEILING_DBTP - 0.5) / 20)
-            y = circular_process(
-                y, f"volume={gain:.2f}dB,alimiter=limit={ceiling:.4f}:attack=5:release=80:level=disabled", tmp
-            )
+            if name not in READY_LOOPS:
+                # Loudness: misura, calcola il guadagno e limita solo il necessario.
+                write_wav(tmp / "m.wav", y)
+                lufs, tp = loudness(tmp / "m.wav")
+                gain = TARGET_LUFS - lufs
+                over = tp + gain - CEILING_DBTP
+                if over > MAX_LIMIT_DB:
+                    gain -= over - MAX_LIMIT_DB
+                ceiling = 10 ** ((CEILING_DBTP - 0.5) / 20)
+                y = circular_process(
+                    y, f"volume={gain:.2f}dB,alimiter=limit={ceiling:.4f}:attack=5:release=80:level=disabled", tmp
+                )
 
             out = raw_dir / f"{name}.ogg"
             write_wav(tmp / "final.wav", y)

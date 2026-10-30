@@ -227,7 +227,7 @@ class Mixer(private val context: Context, private val store: Store) {
 
     private fun voice(id: String): LoopVoice = voices.getOrPut(id) {
         gains[id] = 0f
-        LoopVoice(context, requireNotNull(Sounds[id]).res)
+        LoopVoice(context, requireNotNull(Sounds[id]).res, seamless = id == "candela")
     }
 
     /**

@@ -60,12 +60,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,6 +80,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -85,6 +88,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import it.chiarella.app.ChiarellaApp
+import it.chiarella.app.audio.BreathAudio
 import it.chiarella.app.data.Passion
 import it.chiarella.app.data.PassionCategory
 import it.chiarella.app.data.Store
@@ -425,40 +433,61 @@ private fun PassionBadge(category: PassionCategory, size: androidx.compose.ui.un
 @Composable
 internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current.applicationContext
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val cues = remember(context) { BreathAudio(context) }
+    val mixerState by (context as ChiarellaApp).mixer.state.collectAsStateWithLifecycle()
+    val latestMaster by rememberUpdatedState(mixerState.master)
+    val latestOnDone by rememberUpdatedState(onDone)
+    DisposableEffect(cues) { onDispose { cues.release() } }
     val breath = remember { Animatable(0f) }
     var phase by remember { mutableStateOf<BreathPhase?>(null) }
     var secondsLeft by remember { mutableIntStateOf(3) }
     var cycle by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        // Tre secondi per mettersi comodi.
-        for (s in 3 downTo 1) {
-            secondsLeft = s
-            delay(1000)
-        }
-        repeat(BREATH_CYCLES) { c ->
-            cycle = c + 1
-            for (p in BreathPhase.entries) {
-                phase = p
-                haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                val anim = launch {
-                    when (p) {
-                        BreathPhase.IN -> breath.animateTo(1f, tween(p.seconds * 1000, easing = FastOutSlowInEasing))
-                        BreathPhase.OUT -> breath.animateTo(0f, tween(p.seconds * 1000, easing = FastOutSlowInEasing))
-                        BreathPhase.HOLD -> Unit
-                    }
-                }
-                for (s in p.seconds downTo 1) {
+    LaunchedEffect(cues, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            try {
+                phase = null
+                cycle = 0
+                breath.snapTo(0f)
+                // Tre secondi per mettersi comodi.
+                for (s in 3 downTo 1) {
                     secondsLeft = s
                     delay(1000)
                 }
-                anim.join()
+                repeat(BREATH_CYCLES) { c ->
+                    cycle = c + 1
+                    for (p in BreathPhase.entries) {
+                        phase = p
+                        when (p) {
+                            BreathPhase.IN -> cues.play(true, latestMaster * latestMaster)
+                            BreathPhase.OUT -> cues.play(false, latestMaster * latestMaster)
+                            BreathPhase.HOLD -> cues.stop()
+                        }
+                        haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        val anim = launch {
+                            when (p) {
+                                BreathPhase.IN -> breath.animateTo(1f, tween(p.seconds * 1000, easing = FastOutSlowInEasing))
+                                BreathPhase.OUT -> breath.animateTo(0f, tween(p.seconds * 1000, easing = FastOutSlowInEasing))
+                                BreathPhase.HOLD -> Unit
+                            }
+                        }
+                        for (s in p.seconds downTo 1) {
+                            secondsLeft = s
+                            delay(1000)
+                        }
+                        anim.join()
+                    }
+                }
+                phase = null
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                delay(400)
+                latestOnDone()
+            } finally {
+                cues.stop()
             }
         }
-        phase = null
-        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-        delay(400)
-        onDone()
     }
 
     Column(
