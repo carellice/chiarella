@@ -28,6 +28,7 @@ Dall'[ultima release](https://github.com/carellice/chiarella/releases/latest):
 
 - **12 suoni** in loop continuo, inclusa una candela che scoppietta, da accendere insieme e mescolare liberamente
 - **Volume generale**: dal pulsante con l'altoparlante nella barra in basso alzi o abbassi tutta l'app insieme, senza toccare i volumi dei singoli suoni (né dei profili); il pannello mostra anche come esce davvero ogni suono acceso
+- **Volume del dispositivo**: all'apertura Android e Windows avvisano se il volume di sistema è sotto il massimo o disattivato e propongono «Porta al 100%», da confermare con un tocco. Se il sistema lo impedisce rimane l'indicazione per regolarlo manualmente. Sul web appare un promemoria: il browser non può leggere né modificare il volume del dispositivo. I volumi interni di Chiarella restano come li hai scelti.
 - **Volume per ogni suono**, con slider dedicato, dissolvenze morbide e feedback aptico
 - **Dettaglio del suono**: tieni premuta una card (clic destro su Windows e sul web) e si apre una finestra animata con lo stato del suono (acceso/spento), il volume sempre regolabile, una descrizione, i momenti ideali (dormire, concentrarsi, rilassarsi) e i suoni con cui si abbina bene, da aggiungere con un tocco
 - **Play/Pausa** e **Ferma tutti**

@@ -32,6 +32,10 @@ const categoryById = Object.assign(Object.create(null), Object.fromEntries(CATEG
 const $ = (sel) => document.querySelector(sel);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
+// Il browser non espone il volume del dispositivo: questo è un promemoria, non una misurazione.
+$("#dismiss-device-volume").addEventListener("click", () => { $("#device-volume-notice").hidden = true; });
+window.addEventListener("pageshow", () => { $("#device-volume-notice").hidden = false; });
+
 // ------------------------------------------------------------------ audio
 
 const SOUND_CACHE = "chiarella-audio-v2";

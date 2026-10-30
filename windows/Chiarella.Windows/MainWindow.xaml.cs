@@ -24,6 +24,8 @@ public sealed partial class MainWindow : Window
     private readonly Aurora _aurora;
     private readonly List<SoundCard> _cards = [];
     private readonly DateTime _started = DateTime.Now;
+    private bool _volumeChecked;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _volumeTimer;
 
     public MainWindow()
     {
@@ -84,13 +86,72 @@ public sealed partial class MainWindow : Window
         for (var i = 0; i < _cards.Count; i++) Anim.Rise(_cards[i], 450 + i * 45);
 
         CompositionTarget.Rendering += OnFrame;
+        Root.Loaded += (_, _) => CheckDeviceVolume();
+        Activated += (_, args) =>
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+            {
+                _volumeChecked = false;
+                _volumeTimer?.Stop();
+            }
+            else if (Root.XamlRoot is not null) CheckDeviceVolume();
+        };
         Closed += (_, _) =>
         {
+            _volumeTimer?.Stop();
             CompositionTarget.Rendering -= OnFrame;
             _store.Save();
             _mixer.Dispose();
         };
     }
+
+    private void CheckDeviceVolume()
+    {
+        if (_volumeChecked) return;
+        _volumeChecked = true;
+        var state = SystemVolume.Inspect();
+        DeviceVolumeNotice.IsOpen = state?.NeedsIncrease ?? true;
+        RaiseDeviceVolumeButton.Visibility = state is null ? Visibility.Collapsed : Visibility.Visible;
+        UpdateDeviceVolumeMessage(state);
+        if (!DeviceVolumeNotice.IsOpen) return;
+        _volumeTimer ??= DispatcherQueue.CreateTimer();
+        _volumeTimer.Interval = TimeSpan.FromSeconds(1);
+        _volumeTimer.Tick -= DeviceVolumeTimer_Tick;
+        _volumeTimer.Tick += DeviceVolumeTimer_Tick;
+        _volumeTimer.Start();
+    }
+
+    private void DeviceVolumeTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+    {
+        if (!DeviceVolumeNotice.IsOpen) { sender.Stop(); return; }
+        var state = SystemVolume.Inspect();
+        if (state is { NeedsIncrease: false }) DeviceVolumeNotice.IsOpen = false;
+        else UpdateDeviceVolumeMessage(state);
+    }
+
+    private void UpdateDeviceVolumeMessage(SystemVolumeState? state)
+    {
+        var current = state is null ? "Controlla il volume del dispositivo."
+            : state.Muted ? "Il dispositivo è in silenzioso."
+            : $"Il volume del dispositivo è al {state.Percent}%.";
+        DeviceVolumeNotice.Message = current + " Per ascoltare Chiarella come previsto, portalo al 100% e regola l'ascolto con i volumi dell'app. " +
+            (RaiseDeviceVolumeButton.Visibility == Visibility.Visible
+                ? "Se scegli di alzarlo, la modifica riguarda anche le altre app."
+                : "Puoi regolarlo dai comandi del dispositivo.");
+    }
+
+    private void RaiseDeviceVolumeButton_Click(object sender, RoutedEventArgs e)
+    {
+        var state = SystemVolume.RaiseToMaximum();
+        if (state is { NeedsIncrease: false }) DeviceVolumeNotice.IsOpen = false;
+        else
+        {
+            RaiseDeviceVolumeButton.Visibility = Visibility.Collapsed;
+            UpdateDeviceVolumeMessage(state);
+        }
+    }
+
+    private void DeviceVolumeNotice_Closed(InfoBar sender, InfoBarClosedEventArgs args) => _volumeTimer?.Stop();
 
     private void OnFrame(object? sender, object e)
     {

@@ -30,6 +30,12 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 svg { width: 1em; height: 1em; fill: currentColor; }
 [hidden] { display: none !important; }
 
+.device-volume-notice { display: flex; align-items: flex-start; gap: 12px; margin: 18px 0 0; padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--sky) 35%, transparent); border-radius: 22px; background: rgba(94,200,242,.08); }
+.device-volume-notice strong { font-size: 15px; }
+.device-volume-notice p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.device-volume-notice .round { flex-shrink: 0; }
+
 #aurora { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; }
 
 /* Visibile dal primo rendering, finché tutti i file audio sono disponibili. */

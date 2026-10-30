@@ -1,6 +1,7 @@
 package it.chiarella.app.ui
 
 import android.graphics.Color
+import android.media.AudioManager
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnticipateInterpolator
@@ -22,12 +23,14 @@ import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import it.chiarella.app.ChiarellaApp
 import it.chiarella.app.ui.theme.ChiarellaTheme
+import it.chiarella.app.ui.components.SystemVolumeNotice
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        volumeControlStream = AudioManager.STREAM_MUSIC
 
         // Uscita dallo splash: l'icona si espande e svanisce.
         splash.setOnExitAnimationListener { provider ->
@@ -99,6 +102,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+                if (screen != Screen.GUIDE) SystemVolumeNotice()
             }
         }
     }

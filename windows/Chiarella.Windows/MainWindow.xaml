@@ -50,6 +50,13 @@
                     </Button>
                 </Grid>
 
+                <InfoBar x:Name="DeviceVolumeNotice" IsOpen="False" IsClosable="True" Severity="Informational"
+                         Title="Volume del dispositivo" Margin="0,18,0,0" Closed="DeviceVolumeNotice_Closed">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="RaiseDeviceVolumeButton" Content="Porta al 100%" Click="RaiseDeviceVolumeButton_Click" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
                 <Button x:Name="RelaxCard" AutomationProperties.Name="Un momento per te" Margin="0,22,0,0" Padding="16" CornerRadius="26" HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1"
                         Click="RelaxCard_Click">
