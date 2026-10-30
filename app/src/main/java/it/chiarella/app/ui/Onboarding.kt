@@ -11,12 +11,12 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
+import it.chiarella.app.ui.motion.animateFloat
+import it.chiarella.app.ui.motion.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.spring
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -452,6 +452,7 @@ private fun MixArt() {
     var step by remember { mutableIntStateOf(-1) }
     LaunchedEffect(Unit) {
         delay(600)
+        if (it.chiarella.app.ui.motion.Motion.reduced) return@LaunchedEffect
         while (true) {
             step = (step + 1) % steps.size
             delay(1300)
@@ -518,6 +519,7 @@ private fun VolumeRow(s: Sound, value: Float) {
 private fun PlayerBarArt() {
     var playing by remember { mutableIntStateOf(1) }
     LaunchedEffect(Unit) {
+        if (it.chiarella.app.ui.motion.Motion.reduced) return@LaunchedEffect
         while (true) {
             delay(1800)
             playing = 1 - playing
@@ -589,6 +591,7 @@ private fun PresetsArt() {
     // 0: solo «Salva mix» · 1: tocco su «Salva mix», nasce il profilo · 2: profilo in riproduzione · 3: in pausa
     var phase by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
+        if (it.chiarella.app.ui.motion.Motion.reduced) return@LaunchedEffect
         while (true) {
             delay(1400)
             phase = (phase + 1) % 4

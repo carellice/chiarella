@@ -4,11 +4,13 @@ import android.media.AudioManager
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -20,17 +22,20 @@ import kotlinx.coroutines.delay
 
 /** Controllo a ogni apertura in primo piano, con un solo invito per apertura. */
 @Composable
-internal fun SystemVolumeNotice() {
+internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
     val context = LocalContext.current
     val check = remember(context) {
         SystemVolumeCheck(AndroidSystemVolume(context.getSystemService(AudioManager::class.java)))
     }
     var notice by remember { mutableStateOf<SystemVolumeState?>(null) }
     var manualOnly by remember { mutableStateOf(false) }
+    val enabledNow by rememberUpdatedState(enabled)
+
+    LaunchedEffect(enabled) { if (!enabled) notice = null }
 
     LifecycleStartEffect(check) {
         manualOnly = false
-        notice = check.inspect()?.takeIf { it.needsIncrease }
+        notice = if (enabledNow) check.inspect()?.takeIf { it.needsIncrease } else null
         onStopOrDispose { notice = null }
     }
 
@@ -64,7 +69,10 @@ internal fun SystemVolumeNotice() {
             }) { Text(if (canRaise) "Porta al 100%" else "Ho capito", color = Palette.Peach) }
         },
         dismissButton = {
-            if (canRaise) TextButton(onClick = { notice = null }) { Text("Non ora", color = Palette.TextMuted) }
+            Column {
+                if (canRaise) TextButton(onClick = { notice = null }) { Text("Non ora", color = Palette.TextMuted) }
+                TextButton(onClick = { notice = null; onDisable() }) { Text("Non mostrare più", color = Palette.TextMuted) }
+            }
         },
     )
 }

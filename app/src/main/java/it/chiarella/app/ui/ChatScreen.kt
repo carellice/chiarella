@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.animateFloatAsState
+import it.chiarella.app.ui.motion.animateFloatAsState
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Mic
@@ -18,14 +18,14 @@ import kotlinx.coroutines.delay
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
+import it.chiarella.app.ui.motion.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
+import it.chiarella.app.ui.motion.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.spring
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -508,7 +508,9 @@ private fun RecordingBar(recorder: VoiceRecorder, onCancel: () -> Unit) {
     val elapsed by recorder.elapsed.collectAsStateWithLifecycle()
     // Storico dei livelli: le onde scorrono da destra a sinistra.
     val history = remember { mutableStateListOf<Float>().apply { repeat(BARS) { add(0f) } } }
-    LaunchedEffect(Unit) {
+    val reducedHistory = it.chiarella.app.ui.motion.Motion.reduced
+    LaunchedEffect(reducedHistory) {
+        if (reducedHistory) return@LaunchedEffect
         while (true) {
             history.removeAt(0)
             history.add(recorder.level.value)

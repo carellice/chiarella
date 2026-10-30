@@ -67,6 +67,14 @@ public sealed class SoundDetailView : Grid
         Visibility = Visibility.Visible;
         Refresh();
 
+        if (Anim.ReducedMotion)
+        {
+            card.RenderTransform = new CompositeTransform();
+            card.Opacity = _scrim.Opacity = 1;
+            Tick(0);
+            Focus(FocusState.Programmatic);
+            return;
+        }
         // La finestra parte dal centro della card toccata e si ingrandisce fino al centro della finestra.
         var center = origin.TransformToVisual(this).TransformPoint(new Point(origin.ActualWidth / 2, origin.ActualHeight / 2));
         var transform = new CompositeTransform
@@ -101,6 +109,16 @@ public sealed class SoundDetailView : Grid
     public void Close()
     {
         if (!IsOpen || _host.Children.FirstOrDefault() is not FrameworkElement card) return;
+        if (Anim.ReducedMotion)
+        {
+            Visibility = Visibility.Collapsed;
+            _host.Children.Clear();
+            _scene = null;
+            _refresh = null;
+            _closing = false;
+            Closed?.Invoke();
+            return;
+        }
         _closing = true;
         var transform = (CompositeTransform)card.RenderTransform;
         var ease = new QuadraticEase { EasingMode = EasingMode.EaseIn };

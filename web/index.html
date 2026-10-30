@@ -31,6 +31,7 @@
     <header class="header intro" style="--step:0">
       <div class="header-top">
         <span class="overline" id="greeting">Buonasera</span>
+        <button class="round" id="btn-preferences" title="Impostazioni" aria-label="Impostazioni">⚙</button>
         <button class="round" id="btn-backup" title="Backup e ripristino" aria-label="Backup e ripristino">
           <svg viewBox="0 0 24 24"><path d="M5 20h14v-6h2v8H3v-8h2v6Zm6-18h2v11l4-4 1.4 1.4L12 16.8l-6.4-6.4L7 9l4 4V2Z"/></svg>
         </button>
@@ -46,6 +47,7 @@
       <div>
         <strong id="device-volume-title">Volume del dispositivo</strong>
         <p>Per ascoltare Chiarella come previsto, porta il volume del dispositivo al 100% dai suoi comandi, poi regola l'ascolto con i volumi dell'app.</p>
+        <button class="link" id="disable-device-volume">Non mostrare più</button>
       </div>
       <button class="round" id="dismiss-device-volume" aria-label="Nascondi il promemoria sul volume">✕</button>
     </aside>
@@ -230,6 +232,19 @@
       <button class="gradient wide" type="submit">Salva profilo</button>
     </form>
     <button class="link close" data-close>Annulla</button>
+  </dialog>
+
+  <dialog id="dlg-preferences" aria-labelledby="preferences-title">
+    <h3 id="preferences-title">Impostazioni</h3>
+    <label class="preference-row">
+      <span><strong>Avviso volume del dispositivo</strong><small>Mostra il promemoria all'apertura dell'app.</small></span>
+      <input type="checkbox" id="pref-volume-notice" />
+    </label>
+    <label class="preference-row">
+      <span><strong>Animazioni ridotte</strong><small>Ferma sfondi, particelle e pulsazioni per rendere l'app più leggera. Audio, timer e respiro continuano a funzionare.</small></span>
+      <input type="checkbox" id="pref-reduced-animations" />
+    </label>
+    <button class="gradient wide" data-close>Chiudi</button>
   </dialog>
 
   <dialog id="dlg-help">

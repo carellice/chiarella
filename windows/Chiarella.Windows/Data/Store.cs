@@ -33,6 +33,8 @@ public sealed class Store
     public double MasterVolume { get; set; } = 1;
     public string? LastPassionId { get; set; }
     public bool HelpSeen { get; set; }
+    public bool ShowVolumeNotice { get; set; } = true;
+    public bool ReducedAnimations { get; set; }
 
     private static readonly string Folder =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Chiarella");
@@ -48,6 +50,7 @@ public sealed class Store
     {
         var replacement = new Store
         {
+            ShowVolumeNotice = ShowVolumeNotice, ReducedAnimations = ReducedAnimations,
             Presets = data.Presets, Passions = data.Passions, Volumes = data.Volumes,
             MasterVolume = data.MasterVolume, LastMix = data.LastMix,
             LastTimerMinutes = data.LastTimerMinutes, HelpSeen = data.OnboardingDone, LastPassionId = data.LastPassionId,

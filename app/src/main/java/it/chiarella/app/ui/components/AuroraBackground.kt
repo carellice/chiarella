@@ -1,13 +1,14 @@
 package it.chiarella.app.ui.components
 
-import androidx.compose.animation.animateColorAsState
+import it.chiarella.app.ui.motion.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
+import it.chiarella.app.ui.motion.animateFloat
+import it.chiarella.app.ui.motion.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +32,11 @@ private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF
  */
 @Composable
 fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
+    if (it.chiarella.app.ui.motion.Motion.reduced) {
+        androidx.compose.foundation.layout.Box(modifier.then(Modifier.background(
+            Brush.verticalGradient(listOf(Palette.Night, Color(0xFF0D1030), Palette.NightDeep)))))
+        return
+    }
     val palette = if (colors.isEmpty()) IdleColors else List(3) { colors[it % colors.size] }
     val c1 by animateColorAsState(palette[0], tween(1600), label = "a1")
     val c2 by animateColorAsState(palette[1], tween(1800), label = "a2")

@@ -20,6 +20,19 @@ class Store(context: Context) {
 
     private val prefs = context.getSharedPreferences("chiarella", Context.MODE_PRIVATE)
 
+    // Preferenze del dispositivo: non vengono sovrascritte importando un mix da un altro dispositivo.
+    private val _preferences = MutableStateFlow(AppPreferences(
+        showVolumeNotice = prefs.getBoolean("show_volume_notice", true),
+        reducedAnimations = prefs.getBoolean("reduced_animations", false),
+    ))
+    val preferences: StateFlow<AppPreferences> = _preferences.asStateFlow()
+
+    fun setPreferences(value: AppPreferences) {
+        prefs.edit().putBoolean("show_volume_notice", value.showVolumeNotice)
+            .putBoolean("reduced_animations", value.reducedAnimations).apply()
+        _preferences.value = value
+    }
+
     private val _presets = MutableStateFlow(loadPresets())
     val presets: StateFlow<List<Preset>> = _presets.asStateFlow()
 

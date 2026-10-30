@@ -1,8 +1,8 @@
 package it.chiarella.app.ui.components
 
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import it.chiarella.app.ui.motion.animateFloatAsState
+import it.chiarella.app.ui.motion.spring
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box

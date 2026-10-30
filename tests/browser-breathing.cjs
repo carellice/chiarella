@@ -29,7 +29,7 @@ const server = http.createServer(async (req, res) => {
     await page.waitForFunction(() => soundsReady);
     assert.equal(await page.locator('#device-volume-notice').isVisible(), true);
     const beforeNotice = await page.evaluate(() => JSON.stringify({ master: state.masterVolume, volumes: state.volumes, active: [...state.active] }));
-    assert.equal(await page.locator('#device-volume-notice button').count(), 1, 'il web offre soltanto la chiusura del promemoria');
+    assert.equal(await page.locator('#device-volume-notice button').count(), 2, 'chiusura temporanea oppure disattivazione persistente');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await fs.mkdir(path.join(root, 'dist'), { recursive: true });
     await page.screenshot({ path: path.join(root, 'dist/system-volume-web.png') });
@@ -39,6 +39,19 @@ const server = http.createServer(async (req, res) => {
     await page.reload();
     await page.waitForFunction(() => soundsReady);
     assert.equal(await page.locator('#device-volume-notice').isVisible(), true, 'il promemoria ritorna alla nuova apertura');
+    await page.locator('#disable-device-volume').click();
+    await page.reload();
+    await page.waitForFunction(() => soundsReady);
+    assert.equal(await page.locator('#device-volume-notice').isVisible(), false, 'Non mostrare più resta salvato');
+    await page.locator('#btn-preferences').click();
+    assert.equal(await page.locator('#pref-volume-notice').isChecked(), false);
+    await page.locator('#pref-volume-notice').check();
+    assert.equal(await page.locator('#device-volume-notice').isHidden(), false);
+    await page.locator('#pref-volume-notice').uncheck();
+    await page.locator('#pref-reduced-animations').check();
+    assert.equal(await page.evaluate(() => visualFrame), 0, 'nessun frame decorativo programmato in modalità leggera');
+    await page.screenshot({ path: path.join(root, 'dist/preferences-web.png') });
+    await page.locator('#dlg-preferences [data-close]').click();
     await page.locator('.card[data-id="candela"]').click();
     await page.waitForFunction(() => audio.voices.get('candela')?.source);
     const candle = await page.evaluate(() => {
@@ -47,6 +60,15 @@ const server = http.createServer(async (req, res) => {
     });
     assert.equal(candle.looping, true);
     assert.ok(Math.abs(candle.duration - 13.647846) < 0.05, 'durata originale della candela conservata');
+    await page.evaluate(() => { window.playingCandle = audio.voices.get('candela').source; });
+    await page.locator('#btn-preferences').click();
+    await page.locator('#pref-reduced-animations').uncheck();
+    await page.waitForFunction(() => visualFrame !== 0);
+    assert.equal(await page.evaluate(() => playingCandle === audio.voices.get('candela').source), true);
+    await page.locator('#pref-reduced-animations').check();
+    assert.equal(await page.evaluate(() => visualFrame), 0);
+    assert.equal(await page.evaluate(() => playingCandle === audio.voices.get('candela').source), true, 'le preferenze non riavviano né interrompono l\'audio');
+    await page.locator('#dlg-preferences [data-close]').click();
     await page.locator('.card[data-id="candela"]').click();
     await page.evaluate(() => {
       state.passions = [{ id: 'test', category: 'LETTURA', detail: 'Test' }];
@@ -68,7 +90,12 @@ const server = http.createServer(async (req, res) => {
     await page.waitForFunction(() => cueEvents.length === 3 && breathCues.source);
     await page.locator('#btn-skip').click();
     assert.equal(await page.evaluate(() => breathCues.source), null);
+    await page.reload();
+    await page.waitForFunction(() => soundsReady);
+    assert.equal(await page.evaluate(() => state.reducedAnimations && !state.showVolumeNotice && visualFrame === 0), true, 'preferenze persistenti alla riapertura');
+    await page.evaluate(() => restoreBackup(backupData()));
+    assert.equal(await page.evaluate(() => state.reducedAnimations && !state.showVolumeNotice), true, 'il backup non sovrascrive le preferenze del dispositivo');
     assert.deepEqual(errors, []);
-    console.log('PASS: promemoria volume web senza modifiche automatiche, riapertura e layout mobile; loop candela e segnali del respiro');
+    console.log('PASS: impostazioni persistenti, avviso disattivabile, frame grafici fermi in modalità leggera, audio e respiro operativi, ripristino animazioni');
   } finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); server.close(); process.exitCode = 1; });

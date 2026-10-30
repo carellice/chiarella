@@ -1,9 +1,9 @@
 package it.chiarella.app.ui.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.animateFloatAsState
+import it.chiarella.app.ui.motion.spring
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn

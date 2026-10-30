@@ -37,6 +37,8 @@ un file non valido lascia i dati presenti invariati. I file non vengono inviati 
 `format`, `version` e tutti i campi di `data` sono obbligatori. `exportedAt` è informativo.
 I campi sconosciuti vengono ignorati. Gli identificatori dei suoni non ancora disponibili
 su una piattaforma vengono conservati nei dati, ma non riprodotti.
+Le preferenze «Avviso volume del dispositivo» e «Animazioni ridotte» sono locali al dispositivo:
+non vengono esportate e l'importazione di un backup non le modifica.
 
 - File UTF-8, con o senza BOM, fino a 2 MiB.
 - Al massimo 1000 profili e 1000 passioni, con identificatori distinti per ciascun elenco.

@@ -25,7 +25,10 @@ const state = {
   timerEndsAt: 0,
   timerDuration: 0,
   passions: store.get("passions", []),
+  showVolumeNotice: store.get("showVolumeNotice", true) !== false,
+  reducedAnimations: store.get("reducedAnimations", false) === true,
 };
+let visualFrame = 0;
 const volumeOf = (id) => state.volumes[id] ?? 0.7;
 const soundById = Object.assign(Object.create(null), Object.fromEntries(SOUNDS.map((s) => [s.id, s])));
 const categoryById = Object.assign(Object.create(null), Object.fromEntries(CATEGORIES.map((c) => [c.id, c])));
@@ -34,7 +37,32 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() +
 
 // Il browser non espone il volume del dispositivo: questo è un promemoria, non una misurazione.
 $("#dismiss-device-volume").addEventListener("click", () => { $("#device-volume-notice").hidden = true; });
-window.addEventListener("pageshow", () => { $("#device-volume-notice").hidden = false; });
+window.addEventListener("pageshow", () => { $("#device-volume-notice").hidden = !state.showVolumeNotice; });
+$("#disable-device-volume").addEventListener("click", () => setPreference("showVolumeNotice", false));
+$("#btn-preferences").addEventListener("click", () => $("#dlg-preferences").showModal());
+$("#pref-volume-notice").addEventListener("change", (e) => setPreference("showVolumeNotice", e.target.checked));
+$("#pref-reduced-animations").addEventListener("change", (e) => setPreference("reducedAnimations", e.target.checked));
+
+function setPreference(key, value) {
+  state[key] = value;
+  store.set(key, value);
+  applyPreferences();
+}
+
+function applyPreferences() {
+  $("#device-volume-notice").hidden = !state.showVolumeNotice;
+  $("#pref-volume-notice").checked = state.showVolumeNotice;
+  $("#pref-reduced-animations").checked = state.reducedAnimations;
+  document.body.classList.toggle("reduced-motion", state.reducedAnimations);
+  if (state.reducedAnimations) {
+    cancelAnimationFrame(visualFrame);
+    visualFrame = 0;
+  } else refreshVisuals();
+}
+
+function refreshVisuals() {
+  if (!state.reducedAnimations && !visualFrame && !document.hidden) visualFrame = requestAnimationFrame(frame);
+}
 
 // ------------------------------------------------------------------ audio
 
@@ -716,11 +744,13 @@ function drawAmbience(canvas, sound, t, intensity = null) {
 }
 
 function frame(t) {
+  visualFrame = 0;
+  if (state.reducedAnimations || document.hidden) return;
   drawAurora(t);
   document.querySelectorAll(".card.on canvas").forEach((cv) => drawAmbience(cv, soundById[cv.parentElement.dataset.id], t));
   if (!$("#step-breathe").hidden) drawFlower(t);
   if (detail.id) drawAmbience($("#sd-canvas"), soundById[detail.id], t, detailIntensity());
-  requestAnimationFrame(frame);
+  refreshVisuals();
 }
 
 // ------------------------------------------------------------------ un momento per te
@@ -1049,7 +1079,7 @@ function closeSoundDetail() {
   const dlg = $("#dlg-sound");
   if (!dlg.open || dlg.classList.contains("closing")) return;
   dlg.classList.add("closing");
-  setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); detail.id = null; }, 250);
+  setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); detail.id = null; }, state.reducedAnimations ? 0 : 250);
 }
 
 (function bindSoundDetail() {
@@ -1214,7 +1244,11 @@ async function prepareSounds() {
 $("#loader-retry").addEventListener("click", prepareSounds);
 buildGrid();
 render();
-requestAnimationFrame(frame);
+applyPreferences();
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { cancelAnimationFrame(visualFrame); visualFrame = 0; }
+  else refreshVisuals();
+});
 prepareSounds();
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => { /* offline non disponibile */ });

@@ -10,7 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -20,10 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import it.chiarella.app.ChiarellaApp
 import it.chiarella.app.ui.theme.ChiarellaTheme
 import it.chiarella.app.ui.components.SystemVolumeNotice
+import it.chiarella.app.ui.motion.Motion
 
 class MainActivity : ComponentActivity() {
 
@@ -31,9 +34,15 @@ class MainActivity : ComponentActivity() {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
         volumeControlStream = AudioManager.STREAM_MUSIC
+        val app = application as ChiarellaApp
+        Motion.reduced = app.store.preferences.value.reducedAnimations
 
         // Uscita dallo splash: l'icona si espande e svanisce.
         splash.setOnExitAnimationListener { provider ->
+            if (app.store.preferences.value.reducedAnimations) {
+                provider.remove()
+                return@setOnExitAnimationListener
+            }
             // Aperta da notifica, widget o app recenti, Android mostra lo splash senza icona:
             // in quel caso iconView non esiste (e leggerlo manda in crash), si sfuma solo lo sfondo.
             val icon: View? = runCatching { provider.iconView }.getOrNull()
@@ -55,8 +64,9 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
 
-        val app = application as ChiarellaApp
         setContent {
+            val preferences by app.store.preferences.collectAsStateWithLifecycle()
+            SideEffect { Motion.reduced = preferences.reducedAnimations }
             ChiarellaTheme {
                 var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
                 // "Un momento per te" aperto dalla chat: alla chiusura si torna alla chat.
@@ -102,7 +112,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                if (screen != Screen.GUIDE) SystemVolumeNotice()
+                if (screen != Screen.GUIDE) SystemVolumeNotice(
+                    enabled = preferences.showVolumeNotice,
+                    onDisable = { app.store.setPreferences(preferences.copy(showVolumeNotice = false)) },
+                )
             }
         }
     }

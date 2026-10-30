@@ -118,9 +118,11 @@ public sealed class Equalizer : Grid
 
 public static class Anim
 {
+    public static bool ReducedMotion { get; set; }
     /// <summary>Ingresso: l'elemento sale e appare, con un piccolo ritardo per l'effetto a cascata.</summary>
     public static void Rise(UIElement element, int delayMs, double distance = 36)
     {
+        if (ReducedMotion) { element.Opacity = 1; element.RenderTransform = new CompositeTransform(); return; }
         var transform = new CompositeTransform();
         element.RenderTransform = transform;
         element.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -137,6 +139,7 @@ public static class Anim
     /// <summary>Rimbalzo elastico della scala (per selezioni e "atterraggi").</summary>
     public static void Pop(UIElement element, double from = 0.7)
     {
+        if (ReducedMotion) { element.RenderTransform = new CompositeTransform(); return; }
         if (element.RenderTransform is not CompositeTransform transform)
         {
             transform = new CompositeTransform();
@@ -152,6 +155,7 @@ public static class Anim
 
     public static void Fade(UIElement element, double to, int ms, int delayMs = 0)
     {
+        if (ReducedMotion) { element.Opacity = to; return; }
         var sb = new Storyboard();
         Add(sb, element, "Opacity", element.Opacity, to, ms, delayMs, new QuadraticEase());
         sb.Begin();

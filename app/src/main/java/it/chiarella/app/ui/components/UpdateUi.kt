@@ -1,8 +1,8 @@
 package it.chiarella.app.ui.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.animateFloatAsState
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -135,7 +135,8 @@ fun UpdateSheet(updater: Updater, state: UpdateState, onDismiss: () -> Unit) {
             ) { s ->
                 when (s) {
                     UpdateState.Idle, UpdateState.Checking -> Centered {
-                        CircularProgressIndicator(color = Palette.Lavender, strokeWidth = 3.dp, modifier = Modifier.size(36.dp))
+                        if (it.chiarella.app.ui.motion.Motion.reduced) Text("Controllo…", color = Palette.TextMuted)
+                        else CircularProgressIndicator(color = Palette.Lavender, strokeWidth = 3.dp, modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(14.dp))
                         Text("Controllo se ci sono novità…", color = Palette.TextMuted)
                     }

@@ -1,11 +1,11 @@
 package it.chiarella.app.ui.components
 
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
+import it.chiarella.app.ui.motion.animateFloat
+import it.chiarella.app.ui.motion.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

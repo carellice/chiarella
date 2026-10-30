@@ -49,6 +49,14 @@ Check(!Backup.Parse(empty.ToJsonString()).OnboardingDone);
 File.WriteAllText(Path.Combine(output, "windows.json"), Backup.Stringify(Backup.Parse(fixture)));
 Console.WriteLine("PASS: codec Windows, round trip, file invalidi, archivio vuoto e compatibilità");
 
+var preferences = new Store { ShowVolumeNotice = false, ReducedAnimations = true };
+var storedPreferences = System.Text.Json.JsonSerializer.Serialize(preferences);
+var reopened = System.Text.Json.JsonSerializer.Deserialize<Store>(storedPreferences)!;
+Check(!reopened.ShowVolumeNotice && reopened.ReducedAnimations);
+var previousVersion = System.Text.Json.JsonSerializer.Deserialize<Store>("{}")!;
+Check(previousVersion.ShowVolumeNotice && !previousVersion.ReducedAnimations);
+Console.WriteLine("PASS: preferenze Windows persistenti e valori predefiniti delle versioni precedenti");
+
 // La presentazione del titolo è l'unico legame del modello con WinUI; non serve al codec.
 namespace Chiarella.Data
 {

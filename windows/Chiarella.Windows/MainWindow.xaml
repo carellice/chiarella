@@ -44,6 +44,10 @@
                             ToolTipService.ToolTip="Backup e ripristino" AutomationProperties.Name="Backup e ripristino" Click="BackupButton_Click">
                         <FontIcon Glyph="&#xE74E;" FontSize="16" />
                     </Button>
+                    <Button Style="{StaticResource RoundButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,96,0"
+                            ToolTipService.ToolTip="Impostazioni" AutomationProperties.Name="Impostazioni" Click="PreferencesButton_Click">
+                        <FontIcon Glyph="&#xE713;" FontSize="16" />
+                    </Button>
                     <Button x:Name="HelpButton" Style="{StaticResource RoundButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTipService.ToolTip="Come funziona" AutomationProperties.Name="Come funziona" Click="HelpButton_Click">
                         <FontIcon Glyph="&#xE897;" FontSize="16" />
@@ -55,6 +59,7 @@
                     <InfoBar.ActionButton>
                         <Button x:Name="RaiseDeviceVolumeButton" Content="Porta al 100%" Click="RaiseDeviceVolumeButton_Click" />
                     </InfoBar.ActionButton>
+                    <HyperlinkButton Content="Non mostrare più" Click="DisableVolumeNotice_Click" />
                 </InfoBar>
 
                 <Button x:Name="RelaxCard" AutomationProperties.Name="Un momento per te" Margin="0,22,0,0" Padding="16" CornerRadius="26" HorizontalAlignment="Stretch"

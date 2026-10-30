@@ -30,6 +30,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Anim.ReducedMotion = _store.ReducedAnimations;
         _mixer = new Mixer(_store);
         _aurora = new Aurora(AuroraLayer);
 
@@ -85,7 +86,7 @@ public sealed partial class MainWindow : Window
         for (var i = 0; i < intro.Length; i++) Anim.Rise(intro[i], i * 110);
         for (var i = 0; i < _cards.Count; i++) Anim.Rise(_cards[i], 450 + i * 45);
 
-        CompositionTarget.Rendering += OnFrame;
+        ApplyMotionPreference();
         Root.Loaded += (_, _) => CheckDeviceVolume();
         Activated += (_, args) =>
         {
@@ -107,6 +108,7 @@ public sealed partial class MainWindow : Window
 
     private void CheckDeviceVolume()
     {
+        if (!_store.ShowVolumeNotice) { DeviceVolumeNotice.IsOpen = false; _volumeTimer?.Stop(); return; }
         if (_volumeChecked) return;
         _volumeChecked = true;
         var state = SystemVolume.Inspect();
@@ -153,9 +155,51 @@ public sealed partial class MainWindow : Window
 
     private void DeviceVolumeNotice_Closed(InfoBar sender, InfoBarClosedEventArgs args) => _volumeTimer?.Stop();
 
+    private void DisableVolumeNotice_Click(object sender, RoutedEventArgs e)
+    {
+        _store.ShowVolumeNotice = false;
+        _store.Save();
+        DeviceVolumeNotice.IsOpen = false;
+        _volumeTimer?.Stop();
+    }
+
+    private void ApplyMotionPreference()
+    {
+        Anim.ReducedMotion = _store.ReducedAnimations;
+        CompositionTarget.Rendering -= OnFrame;
+        if (!Anim.ReducedMotion) CompositionTarget.Rendering += OnFrame;
+        // Un solo fotogramma statico, senza callback per ogni refresh dello schermo.
+        OnFrame(this, new object());
+    }
+
+    private async void PreferencesButton_Click(object sender, RoutedEventArgs e)
+    {
+        var volume = new ToggleSwitch { Header = "Avviso volume del dispositivo", IsOn = _store.ShowVolumeNotice };
+        var motion = new ToggleSwitch { Header = "Animazioni ridotte", IsOn = _store.ReducedAnimations };
+        volume.Toggled += (_, _) =>
+        {
+            _store.ShowVolumeNotice = volume.IsOn;
+            _store.Save();
+            _volumeChecked = false;
+            CheckDeviceVolume();
+        };
+        motion.Toggled += (_, _) =>
+        {
+            _store.ReducedAnimations = motion.IsOn;
+            _store.Save();
+            ApplyMotionPreference();
+        };
+        var body = new StackPanel { Spacing = 16, MaxWidth = 420 };
+        body.Children.Add(volume);
+        body.Children.Add(new TextBlock { Text = "Mostra l'avviso all'apertura se il volume non è al massimo.", TextWrapping = TextWrapping.Wrap });
+        body.Children.Add(motion);
+        body.Children.Add(new TextBlock { Text = "Ferma sfondi, particelle e pulsazioni per rendere l'app più leggera. Audio, timer e respiro continuano a funzionare.", TextWrapping = TextWrapping.Wrap });
+        await Dialog("Impostazioni", body).ShowAsync();
+    }
+
     private void OnFrame(object? sender, object e)
     {
-        var t = (DateTime.Now - _started).TotalSeconds;
+        var t = Anim.ReducedMotion ? 0 : (DateTime.Now - _started).TotalSeconds;
         var colors = Relax.Visibility == Visibility.Visible
             ? Relax.AuroraColors
             : _mixer.Active.Select(id => Catalog.Sound(id)!.Primary).ToList();
@@ -189,6 +233,7 @@ public sealed partial class MainWindow : Window
         RenderPlayer();
         RenderPresets();
         Detail.Refresh();
+        if (Anim.ReducedMotion) OnFrame(this, new object());
     }
 
     private void RenderPlayer()

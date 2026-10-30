@@ -43,6 +43,7 @@ fun AmbienceCanvas(
     intensity: Float,
     modifier: Modifier = Modifier,
 ) {
+    if (it.chiarella.app.ui.motion.Motion.reduced) return
     var time by remember { mutableFloatStateOf(0f) }
     val running = intensity > 0.01f
     LaunchedEffect(running) {

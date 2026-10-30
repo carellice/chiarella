@@ -11,8 +11,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import it.chiarella.app.ui.motion.spring
+import it.chiarella.app.ui.motion.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -20,9 +20,9 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
+import it.chiarella.app.ui.motion.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,6 +53,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
+import it.chiarella.app.ui.components.PreferencesDialog
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.SaveAlt
@@ -126,6 +128,9 @@ fun HomeScreen(
     var detailId by remember { mutableStateOf<String?>(null) }
     var showMaster by remember { mutableStateOf(false) }
     var showBackup by remember { mutableStateOf(false) }
+    var showPreferences by remember { mutableStateOf(false) }
+    val preferences by store.preferences.collectAsStateWithLifecycle()
+    if (showPreferences) PreferencesDialog(preferences, store::setPreferences, onClose = { showPreferences = false })
 
     // Permesso notifiche (Android 13+): chiesto la prima volta che parte la musica.
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -168,6 +173,7 @@ fun HomeScreen(
                 Header(
                     state, onShowGuide,
                     onBackup = { showBackup = true },
+                    onPreferences = { showPreferences = true },
                     onShowUpdates = {
                         if (update !is UpdateState.Available && update !is UpdateState.Downloading &&
                             update !is UpdateState.ReadyToInstall
@@ -331,6 +337,7 @@ private fun Header(
     onShowGuide: () -> Unit,
     onShowUpdates: () -> Unit,
     onBackup: () -> Unit,
+    onPreferences: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val greeting = remember {
@@ -345,6 +352,8 @@ private fun Header(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(greeting.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.TextMuted)
             Spacer(Modifier.weight(1f))
+            RoundIconButton(Icons.Rounded.Settings, "Impostazioni", 38.dp, onPreferences)
+            Spacer(Modifier.width(8.dp))
             RoundIconButton(Icons.Rounded.SaveAlt, "Backup e ripristino", 38.dp, onBackup)
             Spacer(Modifier.width(8.dp))
             RoundIconButton(Icons.Rounded.SystemUpdate, "Aggiornamenti", 38.dp, onShowUpdates)

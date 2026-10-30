@@ -336,6 +336,7 @@ public sealed class RelaxView : Grid
             phaseLabel.Text = label;
             phaseHint.Text = hint;
             Anim.Rise(phase, 0, 14);
+            if (Anim.ReducedMotion) Tick(0);
         }
 
         _ = RunBreathing(SetPhase, count, dotList);
@@ -365,14 +366,23 @@ public sealed class RelaxView : Grid
                 setPhase(label, hint);
                 if (to is { } target)
                 {
-                    var from = _breath;
-                    var started = DateTime.Now;
-                    _breathAnim = () =>
+                    if (Anim.ReducedMotion)
                     {
-                        var k = Math.Min((DateTime.Now - started).TotalSeconds / seconds, 1);
-                        var eased = k < 0.5 ? 2 * k * k : 1 - Math.Pow(-2 * k + 2, 2) / 2;
-                        return from + (target - from) * eased;
-                    };
+                        _breath = target;
+                        _breathAnim = null;
+                        Tick(0);
+                    }
+                    else
+                    {
+                        var from = _breath;
+                        var started = DateTime.Now;
+                        _breathAnim = () =>
+                        {
+                            var k = Math.Min((DateTime.Now - started).TotalSeconds / seconds, 1);
+                            var eased = k < 0.5 ? 2 * k * k : 1 - Math.Pow(-2 * k + 2, 2) / 2;
+                            return from + (target - from) * eased;
+                        };
+                    }
                 }
                 else _breathAnim = null;
                 for (var s = seconds; s >= 1; s--)
