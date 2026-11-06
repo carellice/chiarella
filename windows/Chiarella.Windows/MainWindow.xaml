@@ -55,9 +55,21 @@
                 </Grid>
 
                 <InfoBar x:Name="DeviceVolumeNotice" IsOpen="False" IsClosable="True" Severity="Informational"
-                         Title="Volume del dispositivo" Margin="0,18,0,0" Closed="DeviceVolumeNotice_Closed">
+                         Title="Volume del dispositivo" Margin="0,18,0,0" Padding="6,10" CornerRadius="22"
+                         BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1" Closed="DeviceVolumeNotice_Closed">
+                    <InfoBar.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#338B7CF6" Offset="0" />
+                            <GradientStop Color="#1F5EC8F2" Offset="0.6" />
+                            <GradientStop Color="#0AFFFFFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </InfoBar.Background>
+                    <InfoBar.IconSource>
+                        <FontIconSource Glyph="&#xE995;" Foreground="#5EC8F2" />
+                    </InfoBar.IconSource>
                     <InfoBar.ActionButton>
-                        <Button x:Name="RaiseDeviceVolumeButton" Content="Porta al 100%" Click="RaiseDeviceVolumeButton_Click" />
+                        <Button x:Name="RaiseDeviceVolumeButton" Content="Porta al 100%" CornerRadius="16" Padding="16,6"
+                                Style="{StaticResource AccentButtonStyle}" Click="RaiseDeviceVolumeButton_Click" />
                     </InfoBar.ActionButton>
                     <HyperlinkButton Content="Non mostrare più" Click="DisableVolumeNotice_Click" />
                 </InfoBar>

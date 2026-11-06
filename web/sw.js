@@ -1,5 +1,5 @@
 // I suoni sono precaricati dall'app, anche alla prima visita senza worker attivo.
-const CACHE = "chiarella-v8";
+const CACHE = "chiarella-v9";
 const SOUND_CACHE = "chiarella-audio-v2";
 const SHELL = ["./", "index.html", "style.css", "data.js", "backup.js", "app.js", "icon-512.png", "manifest.webmanifest"];
 
