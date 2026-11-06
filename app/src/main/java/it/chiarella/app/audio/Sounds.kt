@@ -9,12 +9,18 @@ import androidx.compose.material.icons.rounded.Forest
 import androidx.compose.material.icons.rounded.Kayaking
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.NightsStay
+import androidx.compose.material.icons.rounded.SelfImprovement
+import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.Thunderstorm
 import androidx.compose.material.icons.rounded.Water
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.unit.dp
 import it.chiarella.app.R
 
 /** Stile dell'animazione che vive dentro la card del suono quando è attivo. */
@@ -30,6 +36,28 @@ data class Sound(
     val secondary: Color,
     val ambience: Ambience,
 )
+
+/** Handpan visto di lato: cupola con la nota centrale e due note laterali (Material non ne ha una). */
+private val HandpanIcon: ImageVector = ImageVector.Builder("Handpan", 24.dp, 24.dp, 24f, 24f).apply {
+    path(fill = SolidColor(Color.Black), pathFillType = PathFillType.EvenOdd) {
+        moveTo(2f, 13f)
+        curveTo(2f, 6.5f, 22f, 6.5f, 22f, 13f)
+        curveTo(22f, 17.5f, 2f, 17.5f, 2f, 13f)
+        close()
+        moveTo(10f, 10.5f)
+        arcToRelative(2f, 1.3f, 0f, true, false, 4f, 0f)
+        arcToRelative(2f, 1.3f, 0f, true, false, -4f, 0f)
+        close()
+        moveTo(5f, 13f)
+        arcToRelative(1.4f, 1f, 0f, true, false, 2.8f, 0f)
+        arcToRelative(1.4f, 1f, 0f, true, false, -2.8f, 0f)
+        close()
+        moveTo(16.2f, 13f)
+        arcToRelative(1.4f, 1f, 0f, true, false, 2.8f, 0f)
+        arcToRelative(1.4f, 1f, 0f, true, false, -2.8f, 0f)
+        close()
+    }
+}.build()
 
 /**
  * Catalogo dei suoni. Per sostituire un suono basta rimpiazzare il file omonimo in
@@ -61,6 +89,12 @@ object Sounds {
             Icons.Rounded.NightsStay, Color(0xFF8B7CF6), Color(0xFFFDE68A), Ambience.FIREFLIES),
         Sound("phon", "Phon", "Soffio caldo e costante", R.raw.phon,
             Icons.Rounded.Dry, Color(0xFFEC4899), Color(0xFFFFB4D9), Ambience.AIRFLOW),
+        Sound("japanese_zen", "Japanese Zen", "Giardino giapponese", R.raw.japanese_zen,
+            Icons.Rounded.Spa, Color(0xFFE879A9), Color(0xFFFBCFE8), Ambience.LEAVES),
+        Sound("zen", "Zen", "Musica per meditare", R.raw.zen,
+            Icons.Rounded.SelfImprovement, Color(0xFF10B981), Color(0xFFA7F3D0), Ambience.FIREFLIES),
+        Sound("handpan", "Handpan", "Note che risuonano", R.raw.handpan,
+            HandpanIcon, Color(0xFFC08552), Color(0xFFF5DEB3), Ambience.RIPPLE),
     )
 
     private val byId = all.associateBy { it.id }
@@ -127,6 +161,18 @@ object SoundInfos {
         "phon" to SoundInfo(
             "Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.",
             listOf(Mood.SLEEP, Mood.FOCUS), listOf("pioggia_dolce", "stufa_elettrica", "vento"),
+        ),
+        "japanese_zen" to SoundInfo(
+            "Atmosfere di un giardino zen giapponese: note lente e spazi di silenzio per rallentare.",
+            listOf(Mood.RELAX, Mood.FOCUS), listOf("fiume", "vento", "pioggia_dolce"),
+        ),
+        "zen" to SoundInfo(
+            "Musica lenta e avvolgente, senza ritmo da seguire: accompagna la meditazione e il riposo.",
+            listOf(Mood.RELAX, Mood.SLEEP), listOf("mare", "grilli", "pioggia_dolce"),
+        ),
+        "handpan" to SoundInfo(
+            "Le note rotonde e risonanti dell'handpan, che si sciolgono l'una nell'altra. Brano di Malte Marten.",
+            listOf(Mood.RELAX, Mood.FOCUS), listOf("fiume", "foresta", "pioggia_dolce"),
         ),
     )
 

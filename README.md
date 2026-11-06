@@ -116,6 +116,13 @@ I segnali in `suoni-respirazione/` sono esportati in `res/raw/respiro_inspira.og
 `res/raw/respiro_espira.ogg`: vengono riprodotti una volta all'inizio di ogni inspirazione
 ed espirazione del respiro guidato, anche nella chat Android. La fase di trattenimento resta silenziosa.
 
+Japanese Zen, Zen e Handpan sono brani musicali di oltre un'ora: se ne usano i primi ~8 minuti
+(`ffmpeg -t 500` verso `loop-chiarella/<Nome>.wav`), chiusi in loop con la stessa dissolvenza incrociata.
+
+### Crediti
+
+- **Handpan**: brano di Malte Marten.
+
 Nomi, descrizioni, icone e colori dei suoni sono in
 `app/src/main/java/it/chiarella/app/audio/Sounds.kt`; profili e preferenze in `data/Store.kt`. Icona, splash e logo bianco si rigenerano con `scripts/gen_icon.py` a partire da `branding/chiarella_logo.png`.
 

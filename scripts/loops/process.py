@@ -40,6 +40,10 @@ NAMES = {
     "Stufa Elettrica": "stufa_elettrica",
     "Temporale": "temporale",
     "Vento": "vento",
+    # Brani musicali lunghi (oltre un'ora): si usano i primi ~8 min, estratti con ffmpeg -t 500.
+    "Japanese Zen.wav": "japanese_zen",
+    "Zen.wav": "zen",
+    "Handpan.wav": "handpan",  # Malte Marten
 }
 
 # Le nuove registrazioni hanno precedenza sui vecchi WAV, conservati come sorgenti.

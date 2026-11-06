@@ -43,6 +43,9 @@ public static class Catalog
         new("vento", "Vento", "Brezza tra i rami", "🍃", Hex("#94A3B8"), Hex("#E2E8F0"), Ambience.Wind),
         new("grilli", "Grilli di notte", "Notte d'estate", "🌙", Hex("#8B7CF6"), Hex("#FDE68A"), Ambience.Fireflies),
         new("phon", "Phon", "Soffio caldo e costante", "🌀", Hex("#EC4899"), Hex("#FFB4D9"), Ambience.Airflow),
+        new("japanese_zen", "Japanese Zen", "Giardino giapponese", "🎋", Hex("#E879A9"), Hex("#FBCFE8"), Ambience.Leaves),
+        new("zen", "Zen", "Musica per meditare", "🧘", Hex("#10B981"), Hex("#A7F3D0"), Ambience.Fireflies),
+        new("handpan", "Handpan", "Note che risuonano", "🥁", Hex("#C08552"), Hex("#F5DEB3"), Ambience.Ripple),
     ];
 
     private static readonly Dictionary<string, Sound> SoundById = Sounds.ToDictionary(s => s.Id);
@@ -65,6 +68,9 @@ public static class Catalog
         ["vento"] = new("Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.", [Relax, Focus], ["mare", "foresta", "falo"]),
         ["grilli"] = new("Una notte d'estate in campagna, con il canto dei grilli e l'aria tiepida.", [Sleep, Relax], ["falo", "fiume", "mare"]),
         ["phon"] = new("Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.", [Sleep, Focus], ["pioggia_dolce", "stufa_elettrica", "vento"]),
+        ["japanese_zen"] = new("Atmosfere di un giardino zen giapponese: note lente e spazi di silenzio per rallentare.", [Relax, Focus], ["fiume", "vento", "pioggia_dolce"]),
+        ["zen"] = new("Musica lenta e avvolgente, senza ritmo da seguire: accompagna la meditazione e il riposo.", [Relax, Sleep], ["mare", "grilli", "pioggia_dolce"]),
+        ["handpan"] = new("Le note rotonde e risonanti dell'handpan, che si sciolgono l'una nell'altra. Brano di Malte Marten.", [Relax, Focus], ["fiume", "foresta", "pioggia_dolce"]),
     };
 
     public static SoundInfo Info(string id) => Infos[id];

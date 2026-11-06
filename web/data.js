@@ -13,6 +13,9 @@ const SOUNDS = [
   { id: "vento", name: "Vento", tagline: "Brezza tra i rami", icon: "🍃", primary: "#94A3B8", secondary: "#E2E8F0", ambience: "wind" },
   { id: "grilli", name: "Grilli di notte", tagline: "Notte d'estate", icon: "🌙", primary: "#8B7CF6", secondary: "#FDE68A", ambience: "fireflies" },
   { id: "phon", name: "Phon", tagline: "Soffio caldo e costante", icon: "🌀", primary: "#EC4899", secondary: "#FFB4D9", ambience: "airflow" },
+  { id: "japanese_zen", name: "Japanese Zen", tagline: "Giardino giapponese", icon: "🎋", primary: "#E879A9", secondary: "#FBCFE8", ambience: "leaves" },
+  { id: "zen", name: "Zen", tagline: "Musica per meditare", icon: "🧘", primary: "#10B981", secondary: "#A7F3D0", ambience: "fireflies" },
+  { id: "handpan", name: "Handpan", tagline: "Note che risuonano", icon: "🥁", primary: "#C08552", secondary: "#F5DEB3", ambience: "ripple" },
 ];
 
 // Dettaglio dei suoni (clic destro o pressione lunga su una card): descrizione, momenti ideali, abbinamenti.
@@ -30,6 +33,9 @@ const SOUND_INFO = {
   vento: { desc: "Brezza tra i rami, a raffiche morbide: dà respiro a qualsiasi mix.", moods: ["relax", "focus"], pairs: ["mare", "foresta", "falo"] },
   grilli: { desc: "Una notte d'estate in campagna, con il canto dei grilli e l'aria tiepida.", moods: ["sleep", "relax"], pairs: ["falo", "fiume", "mare"] },
   phon: { desc: "Il soffio caldo e costante di un phon: un rumore bianco amato da molti per addormentarsi.", moods: ["sleep", "focus"], pairs: ["pioggia_dolce", "stufa_elettrica", "vento"] },
+  japanese_zen: { desc: "Atmosfere di un giardino zen giapponese: note lente e spazi di silenzio per rallentare.", moods: ["relax", "focus"], pairs: ["fiume", "vento", "pioggia_dolce"] },
+  zen: { desc: "Musica lenta e avvolgente, senza ritmo da seguire: accompagna la meditazione e il riposo.", moods: ["relax", "sleep"], pairs: ["mare", "grilli", "pioggia_dolce"] },
+  handpan: { desc: "Le note rotonde e risonanti dell'handpan, che si sciolgono l'una nell'altra. Brano di Malte Marten.", moods: ["relax", "focus"], pairs: ["fiume", "foresta", "pioggia_dolce"] },
 };
 
 // `%s` viene sostituito dal dettaglio scritto dall'utente (o da `fallback` se manca).
