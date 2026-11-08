@@ -43,7 +43,8 @@ fun VolumeSlider(
     secondary: Color,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.skeuo) SkeuoVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier) else ClassicVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier)
+    if (Look.metro) MetroVolumeSlider(value = value, onValueChange = onValueChange, modifier = modifier)
+    else if (Look.skeuo) SkeuoVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier) else ClassicVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier)
 }
 
 /** Slider a pillola con riempimento sfumato, pomello luminoso e piccoli "tick" aptici. */
@@ -208,6 +209,50 @@ private fun SkeuoVolumeSlider(
                     drawLine(Color(0x99FFFFFF), Offset(left + 3.dp.toPx(), ly + 1.2f), Offset(left + capW - 3.dp.toPx(), ly + 1.2f), 1f)
                 }
                 drawLine(secondary, Offset(x, top + 2.dp.toPx()), Offset(x, top + 5.dp.toPx()), 2f)
+            },
+    )
+}
+
+// ------------------------------------------------------------------ stile Metro
+
+/** Slider Metro: barra piatta e cursore rettangolare bianco, senza animazioni elastiche. */
+@Composable
+private fun MetroVolumeSlider(value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier) {
+    val haptic = LocalHapticFeedback.current
+    val onChange by rememberUpdatedState(onValueChange)
+    var width by remember { mutableIntStateOf(1) }
+    var lastStep by remember { mutableIntStateOf((value * 10).toInt()) }
+
+    fun emit(x: Float) {
+        val v = (x / width).coerceIn(0f, 1f)
+        val step = (v * 10).toInt()
+        if (step != lastStep) {
+            lastStep = step
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+        onChange(v)
+    }
+
+    Box(
+        modifier
+            .height(26.dp)
+            .onSizeChanged { width = it.width.coerceAtLeast(1) }
+            .pointerInput(Unit) { detectTapGestures { emit(it.x) } }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, _ ->
+                    change.consume()
+                    emit(change.position.x)
+                }
+            }
+            .drawBehind {
+                val track = 8.dp.toPx()
+                val thumbW = 10.dp.toPx()
+                val top = (size.height - track) / 2
+                val x = thumbW / 2 + (size.width - thumbW) * value
+                drawRect(Color.White.copy(alpha = 0.28f), Offset(0f, top), Size(size.width, track))
+                drawRect(Color.White, Offset(0f, top), Size(x, track))
+                drawRect(Color.Black, Offset(x - thumbW / 2, 0f), Size(thumbW, size.height))
+                drawRect(Color.White, Offset(x - thumbW / 2 + 2.dp.toPx(), 2.dp.toPx()), Size(thumbW - 4.dp.toPx(), size.height - 4.dp.toPx()))
             },
     )
 }

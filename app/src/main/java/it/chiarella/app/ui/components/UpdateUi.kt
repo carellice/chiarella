@@ -73,9 +73,11 @@ fun UpdateBanner(state: UpdateState, onOpen: () -> Unit, onDismiss: () -> Unit, 
     Row(
         modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.18f))))
-            .border(1.dp, Color.White.copy(alpha = 0.18f), shape)
+            .look(
+                skeuo = { clip(shape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.18f)))).border(1.dp, Color.White.copy(alpha = 0.18f), shape) },
+                classic = { clip(shape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.18f)))).border(1.dp, Color.White.copy(alpha = 0.18f), shape) },
+                metro = { background(Palette.Lavender) },
+            )
             .clickable(onClick = onOpen)
             .padding(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -84,7 +86,7 @@ fun UpdateBanner(state: UpdateState, onOpen: () -> Unit, onDismiss: () -> Unit, 
             Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .background(BrassBrush),
+                .then(if (Look.metro) Modifier.border(2.dp, Color.White, CircleShape) else Modifier.background(BrassBrush)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.SystemUpdate, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -202,7 +204,7 @@ private fun ReleaseDetails(release: Release, actions: @Composable () -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .heightIn(max = 260.dp)
-                .look(skeuo = { this.recessed(RoundedCornerShape(18.dp)) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.05f)) })
+                .look(skeuo = { this.recessed(RoundedCornerShape(18.dp)) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {

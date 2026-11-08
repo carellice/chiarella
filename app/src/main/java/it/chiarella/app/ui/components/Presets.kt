@@ -147,6 +147,7 @@ private fun PresetCard(
                         .background(Palette.Glass)
                         .border(width = (1f + glow).dp, color = Color.White.copy(alpha = 0.12f + 0.6f * glow), shape = shape)
                 },
+                metro = { background(colors.first()).border(3.dp, Color.White.copy(alpha = glow)) },
             )
             .combinedClickable(
                 interactionSource = interaction,
@@ -195,11 +196,11 @@ private fun NewPresetCard(onClick: () -> Unit) {
             .padding(vertical = 6.dp)
             .width(96.dp)
             .height(112.dp)
-            .clip(shape)
+            .clip(if (Look.metro) androidx.compose.ui.graphics.RectangleShape else shape)
             .drawBehind {
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.22f),
-                    cornerRadius = CornerRadius(24.dp.toPx()),
+                    cornerRadius = CornerRadius(if (Look.metro) 0f else 24.dp.toPx()),
                     style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f))),
                 )
             }
@@ -210,7 +211,7 @@ private fun NewPresetCard(onClick: () -> Unit) {
             Box(
                 Modifier
                     .size(36.dp)
-                    .look(skeuo = { this.metalCap() }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.1f)) }),
+                    .look(skeuo = { this.metalCap() }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.1f)) }, metro = { this.border(2.dp, Palette.Text, CircleShape) }),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null, tint = Palette.Text)
@@ -230,7 +231,7 @@ private fun EmptyPresetsHint(modifier: Modifier = Modifier) {
             .padding(vertical = 6.dp)
             .width(236.dp)
             .height(112.dp)
-            .look(skeuo = { this.recessed(shape, Color(0x66000000)) }, classic = { this.clip(shape).background(Palette.Glass) })
+            .look(skeuo = { this.recessed(shape, Color(0x66000000)) }, classic = { this.clip(shape).background(Palette.Glass) }, metro = { this.background(Palette.Glass) })
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
     ) {

@@ -74,6 +74,8 @@ import it.chiarella.app.ui.theme.glossyCap
 import it.chiarella.app.ui.theme.lcd
 import it.chiarella.app.ui.theme.metalCap
 import it.chiarella.app.ui.theme.screw
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.navigationBarsPadding
 @Composable
 fun PlayerBar(
     state: Mixer.State,
@@ -84,7 +86,8 @@ fun PlayerBar(
     onVolume: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.skeuo) SkeuoPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier) else ClassicPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
+    if (Look.metro) MetroPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
+    else if (Look.skeuo) SkeuoPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier) else ClassicPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
 }
 
 @Composable
@@ -96,7 +99,8 @@ fun RoundIconButton(
     tint: Color = Color.Unspecified,
 ) {
     // Senza colore esplicito ogni stile usa il suo: grigio-lavanda o avorio sul metallo.
-    if (Look.skeuo) SkeuoRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Color(0xFFEDE3D2) })
+    if (Look.metro) MetroRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Palette.Text })
+    else if (Look.skeuo) SkeuoRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Color(0xFFEDE3D2) })
     else ClassicRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Palette.TextMuted })
 }
 
@@ -546,3 +550,114 @@ private fun SkeuoRoundIconButton(
 }
 
 private val AmberGlow = Shadow(Color(0xCCFF9A1F), androidx.compose.ui.geometry.Offset.Zero, 12f)
+
+// ------------------------------------------------------------------ stile Metro
+
+/** Application bar di Windows Phone: fascia piatta a tutta larghezza con pulsanti tondi a contorno ed etichette. */
+@Composable
+private fun MetroPlayerBar(
+    state: Mixer.State,
+    presetName: String?,
+    onTogglePlay: () -> Unit,
+    onStop: () -> Unit,
+    onTimer: () -> Unit,
+    onVolume: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = LocalHapticFeedback.current
+    val sounds = state.active.mapNotNull { Sounds[it] }
+    val now = rememberNow(state.timerActive)
+    val remaining = (state.timerEndsAt - now).coerceAtLeast(0)
+    val title = presetName ?: if (sounds.size == 1) sounds[0].name else "il tuo mix"
+    val subtitle = when {
+        state.interrupted -> "in attesa…"
+        state.playing -> if (sounds.size == 1) "in riproduzione" else "${sounds.size} suoni in riproduzione"
+        else -> "in pausa"
+    }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .background(Palette.Surface)
+            .navigationBarsPadding()
+            .padding(top = 12.dp, bottom = 8.dp),
+    ) {
+        Text(
+            title.lowercase(),
+            style = MaterialTheme.typography.titleLarge.copy(fontSize = MaterialTheme.typography.titleLarge.fontSize * 0.75f),
+            color = Palette.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+        Text(
+            subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+        Spacer(Modifier.size(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            MetroBarButton(
+                when {
+                    state.master < 0.01f -> Icons.AutoMirrored.Rounded.VolumeOff
+                    state.master < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
+                    else -> Icons.AutoMirrored.Rounded.VolumeUp
+                },
+                "volume ${(state.master * 100).toInt()}", onClick = onVolume,
+            )
+            MetroBarButton(Icons.Rounded.Bedtime, if (state.timerActive) formatCountdown(remaining) else "timer", lit = state.timerActive, onClick = onTimer)
+            MetroBarButton(
+                if (state.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                if (state.playing) "pausa" else "riproduci", lit = true,
+            ) {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                onTogglePlay()
+            }
+            MetroBarButton(Icons.Rounded.Stop, "ferma", onClick = onStop)
+        }
+    }
+}
+
+/** Pulsante della application bar: cerchio a contorno, pieno quando [lit]. */
+@Composable
+private fun MetroBarButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, lit: Boolean = false, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(if (lit) Palette.Text else Color.Transparent)
+                .border(2.dp, Palette.Text, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = label, tint = if (lit) Color.Black else Palette.Text, modifier = Modifier.size(24.dp))
+        }
+        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Normal), color = Palette.TextMuted, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+@Composable
+private fun MetroRoundIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    size: Dp,
+    onClick: () -> Unit,
+    tint: Color,
+) {
+    val haptic = LocalHapticFeedback.current
+    Box(
+        Modifier
+            .size(size)
+            .clip(CircleShape)
+            .border(2.dp, tint, CircleShape)
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(size * 0.5f))
+    }
+}

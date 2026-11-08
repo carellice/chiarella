@@ -24,14 +24,16 @@ class Store(context: Context) {
     private val _preferences = MutableStateFlow(AppPreferences(
         showVolumeNotice = prefs.getBoolean("show_volume_notice", true),
         reducedAnimations = prefs.getBoolean("reduced_animations", false),
-        skeuomorphism = prefs.getBoolean("skeuomorphism", false),
+        // "skeuomorphism" è la vecchia preferenza booleana, letta solo se lo stile non è mai stato scelto.
+        style = prefs.getString("ui_style", null)?.let { v -> UiStyle.entries.firstOrNull { it.name == v } }
+            ?: if (prefs.getBoolean("skeuomorphism", false)) UiStyle.SKEUO else UiStyle.CLASSIC,
     ))
     val preferences: StateFlow<AppPreferences> = _preferences.asStateFlow()
 
     fun setPreferences(value: AppPreferences) {
         prefs.edit().putBoolean("show_volume_notice", value.showVolumeNotice)
             .putBoolean("reduced_animations", value.reducedAnimations)
-            .putBoolean("skeuomorphism", value.skeuomorphism).apply()
+            .putString("ui_style", value.style.name).apply()
         _preferences.value = value
     }
 

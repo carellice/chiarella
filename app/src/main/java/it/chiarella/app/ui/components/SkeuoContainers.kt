@@ -37,6 +37,7 @@ import it.chiarella.app.ui.theme.Look
 import it.chiarella.app.ui.theme.Palette
 import androidx.compose.ui.graphics.takeOrElse
 import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.metroSwivel
 
 /** Foglio dal basso rivestito in pelle cucita (o il ModalBottomSheet classico). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +47,19 @@ fun LeatherSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (Look.metro) {
+        // Metro: pannello piatto a spigoli vivi, senza maniglia.
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = sheetState,
+            containerColor = Palette.Surface,
+            shape = RectangleShape,
+            tonalElevation = 0.dp,
+            dragHandle = { Spacer(Modifier.height(24.dp)) },
+            content = content,
+        )
+        return
+    }
     if (!Look.skeuo) {
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
@@ -93,7 +107,7 @@ fun LeatherAlertDialog(
     text: (@Composable () -> Unit)? = null,
     containerColor: Color = Color.Unspecified,
 ) {
-    if (!Look.skeuo) {
+    if (!Look.skeuo && !Look.metro) {
         AlertDialog(
             onDismissRequest = onDismissRequest, confirmButton = confirmButton, modifier = modifier,
             dismissButton = dismissButton, title = title, text = text,
@@ -105,7 +119,7 @@ fun LeatherAlertDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .leather(RoundedCornerShape(26.dp), elevation = 24.dp)
+                .then(if (Look.metro) Modifier.metroSwivel().background(Palette.SurfaceHigh) else Modifier.leather(RoundedCornerShape(26.dp), elevation = 24.dp))
                 .padding(start = 26.dp, end = 18.dp, top = 26.dp, bottom = 14.dp)
         ) {
             CompositionLocalProvider(LocalContentColor provides Palette.Text) {

@@ -8,6 +8,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
+import it.chiarella.app.data.UiStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,14 +53,28 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
                     Switch(modifier = Modifier.semantics { contentDescription = "Animazioni ridotte" }, checked = preferences.reducedAnimations,
                         onCheckedChange = { onChange(preferences.copy(reducedAnimations = it)) })
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Stile skeuomorfico", color = Palette.Text)
-                        Spacer(Modifier.height(4.dp))
-                        Text("Legno, pelle cucita, ottone e metallo: l'app diventa un vecchio apparecchio hi-fi. Spento, torna lo stile classico.", color = Palette.TextMuted)
+                Column(Modifier.selectableGroup()) {
+                    Text("Stile grafico", color = Palette.Text)
+                    Spacer(Modifier.height(4.dp))
+                    listOf(
+                        Triple(UiStyle.CLASSIC, "Classico", "Cielo notturno, vetro e luci soffuse."),
+                        Triple(UiStyle.SKEUO, "Skeuomorfico", "Legno, pelle cucita, ottone e metallo: un vecchio apparecchio hi-fi."),
+                        Triple(UiStyle.METRO, "Metro", "Riquadri piatti a tinta unita su nero, come su Windows Phone."),
+                    ).forEach { (style, label, hint) ->
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .selectable(preferences.style == style, role = Role.RadioButton) { onChange(preferences.copy(style = style)) }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = preferences.style == style, onClick = null)
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text(label, color = Palette.Text)
+                                Text(hint, color = Palette.TextMuted)
+                            }
+                        }
                     }
-                    Switch(modifier = Modifier.semantics { contentDescription = "Stile skeuomorfico" }, checked = preferences.skeuomorphism,
-                        onCheckedChange = { onChange(preferences.copy(skeuomorphism = it)) })
                 }
             }
         },

@@ -2,6 +2,7 @@ package it.chiarella.app.ui.components
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.swivel
 import it.chiarella.app.ui.theme.lcd
 import it.chiarella.app.ui.theme.Skeuo
 import it.chiarella.app.ui.theme.keyCap
@@ -137,6 +138,10 @@ fun SoundDetailDialog(
                     .widthIn(max = 420.dp)
                     .fillMaxWidth()
                     .graphicsLayer {
+                        if (Look.metro) {
+                            swivel(progress)
+                            return@graphicsLayer
+                        }
                         alpha = progress.coerceIn(0f, 1f)
                         val s = 0.82f + 0.18f * progress
                         scaleX = s
@@ -145,7 +150,7 @@ fun SoundDetailDialog(
                         rotationX = (1f - progress) * 12f
                         cameraDistance = 16 * density
                     }
-                    .look(skeuo = { this.leather(shape, elevation = 24.dp) }, classic = { this.clip(shape).background(Palette.Surface).border(1.dp, Brush.verticalGradient(listOf(sound.secondary.copy(alpha = 0.6f), Palette.GlassBorder)), shape) })
+                    .look(skeuo = { this.leather(shape, elevation = 24.dp) }, classic = { this.clip(shape).background(Palette.Surface).border(1.dp, Brush.verticalGradient(listOf(sound.secondary.copy(alpha = 0.6f), Palette.GlassBorder)), shape) }, metro = { this.background(Palette.Surface) })
                     // I tocchi dentro la finestra non devono chiuderla.
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}
                     .verticalScroll(rememberScrollState()),
@@ -172,9 +177,9 @@ fun SoundDetailDialog(
                                 style = MaterialTheme.typography.labelLarge,
                                 color = Palette.Text,
                                 modifier = Modifier
-                                    .clip(CircleShape)
+                                    .clip(if (Look.metro) androidx.compose.ui.graphics.RectangleShape else CircleShape)
                                     .background(sound.primary.copy(alpha = 0.18f))
-                                    .border(1.dp, sound.secondary.copy(alpha = 0.35f), CircleShape)
+                                    .border(1.dp, sound.secondary.copy(alpha = 0.35f), if (Look.metro) androidx.compose.ui.graphics.RectangleShape else CircleShape)
                                     .padding(horizontal = 12.dp, vertical = 7.dp),
                             )
                         }
@@ -248,7 +253,7 @@ private fun DetailHeader(sound: Sound, active: Boolean, playing: Boolean, volume
                         )
                     }
                 }
-                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }),
+                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }, metro = { this.background(sound.primary) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(sound.icon, null, tint = Color.White, modifier = Modifier.size(46.dp))
@@ -314,8 +319,8 @@ private fun VolumeBox(sound: Sound, active: Boolean, volume: Float, onVolumeChan
     Column(
         modifier
             .fillMaxWidth()
-            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp)) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)) })
-            .border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp))
+            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp)) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
+            .border(1.dp, if (Look.metro) Color.Transparent else Palette.GlassBorder, RoundedCornerShape(20.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -348,9 +353,9 @@ private fun PairChip(sound: Sound, active: Boolean, modifier: Modifier = Modifie
     Column(
         modifier
             .graphicsLayer { scaleX = press.value; scaleY = press.value }
-            .clip(RoundedCornerShape(20.dp))
+            .clip(if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(20.dp))
             .background(lerp(Color.White.copy(alpha = 0.05f), sound.primary.copy(alpha = 0.35f), on))
-            .border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.7f), on), RoundedCornerShape(20.dp))
+            .border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.7f), on), if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(20.dp))
             .clickable {
                 scope.launch {
                     press.snapTo(0.9f)
@@ -364,7 +369,7 @@ private fun PairChip(sound: Sound, active: Boolean, modifier: Modifier = Modifie
         Box(
             Modifier
                 .size(36.dp)
-                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }),
+                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }, metro = { this.background(sound.primary) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(sound.icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -393,6 +398,7 @@ private fun ToggleButton(sound: Sound, active: Boolean, modifier: Modifier = Mod
                         )
                         .border(1.dp, Palette.GlassBorder.copy(alpha = on), CircleShape)
                 },
+                metro = { if (active) border(2.dp, Palette.Text) else background(sound.primary) },
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,

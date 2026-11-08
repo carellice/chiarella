@@ -2,6 +2,7 @@ package it.chiarella.app.ui.components
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.metroSwivel
 import it.chiarella.app.ui.theme.Skeuo
 import it.chiarella.app.ui.theme.keyCap
 import it.chiarella.app.ui.theme.metalCap
@@ -84,6 +85,7 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
                         clip(shape).background(Brush.verticalGradient(listOf(Palette.SurfaceHigh, Palette.Surface)))
                             .border(1.dp, Palette.GlassBorder, shape)
                     },
+                    metro = { metroSwivel().background(Palette.SurfaceHigh) },
                 )
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,6 +98,7 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
                             .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.25f))))
                             .border(1.dp, Palette.GlassBorder, CircleShape)
                     },
+                    metro = { border(2.dp, Palette.Text, CircleShape) },
                 ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -106,7 +109,7 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
             Text("Volume del dispositivo", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
             Spacer(Modifier.height(18.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f).height(8.dp).look(skeuo = { recessed(CircleShape, Color(0x66000000)) }, classic = { clip(CircleShape).background(Palette.Glass) })) {
+                Box(Modifier.weight(1f).height(8.dp).look(skeuo = { recessed(CircleShape, Color(0x66000000)) }, classic = { clip(CircleShape).background(Palette.Glass) }, metro = { background(Palette.Glass) })) {
                     Box(Modifier.fillMaxWidth(if (volume.muted) 0f else volume.percent / 100f).fillMaxHeight()
                         .clip(CircleShape).background(BrassBrush))
                 }
@@ -128,7 +131,7 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
             Spacer(Modifier.height(22.dp))
             Box(
                 Modifier.fillMaxWidth().height(50.dp)
-                    .look(skeuo = { keyCap(RoundedCornerShape(14.dp), brass = true) }, classic = { clip(CircleShape).background(BrassBrush) })
+                    .look(skeuo = { keyCap(RoundedCornerShape(14.dp), brass = true) }, classic = { clip(CircleShape).background(BrassBrush) }, metro = { background(Palette.Lavender) })
                     .clickable {
                         if (canRaise) {
                             notice = check.raiseToMaximum()?.takeIf { it.needsIncrease }

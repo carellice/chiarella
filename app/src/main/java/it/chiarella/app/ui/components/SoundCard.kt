@@ -72,6 +72,12 @@ import it.chiarella.app.ui.theme.brushedMetal
 import it.chiarella.app.ui.theme.glassGlare
 import it.chiarella.app.ui.theme.recessed
 import kotlin.math.roundToInt
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import it.chiarella.app.ui.motion.Motion
+import it.chiarella.app.ui.theme.Metro
+import it.chiarella.app.ui.theme.metroTilt
+import kotlinx.coroutines.delay
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SoundCard(
@@ -84,7 +90,8 @@ fun SoundCard(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.skeuo) SkeuoSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier) else ClassicSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
+    if (Look.metro) MetroSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
+    else if (Look.skeuo) SkeuoSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier) else ClassicSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -475,5 +482,122 @@ private fun SkeuoIconBubble(sound: Sound, active: Boolean, on: Float, live: Bool
             tint = lerp(Color(0xFFE6DCCB), Color.White, on),
             modifier = Modifier.size(20.dp),
         )
+    }
+}
+
+// ------------------------------------------------------------------ stile Metro
+
+/**
+ * Live tile: spento è un riquadro grigio con l'icona nel colore del suono, acceso
+ * si riempie del colore del suono. Mentre suona, ogni pochi secondi il contenuto
+ * scorre in alto e mostra la descrizione, come le tile di Windows Phone.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MetroSoundCard(
+    sound: Sound,
+    active: Boolean,
+    playing: Boolean,
+    volume: Float,
+    onToggle: () -> Unit,
+    onVolumeChange: (Float) -> Unit,
+    onDetails: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = LocalHapticFeedback.current
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val press by animateFloatAsState(if (pressed) 1f else 0f, spring(dampingRatio = 0.7f, stiffness = 900f), label = "tilt")
+    val on by animateFloatAsState(if (active) 1f else 0f, tween(220), label = "on")
+    val live = active && playing
+
+    // Faccia della tile: 0 icona, 1 descrizione. Gira solo mentre il suono è in riproduzione.
+    var face by remember { mutableIntStateOf(0) }
+    LaunchedEffect(live) {
+        face = 0
+        if (!live || Motion.reduced) return@LaunchedEffect
+        delay(1500L + (sound.id.hashCode() and 0x7FF))
+        while (true) {
+            face = 1 - face
+            delay(if (face == 1) 3500L else 5000L)
+        }
+    }
+
+    Box(
+        modifier
+            .height(178.dp)
+            .metroTilt(press)
+            .background(lerp(Metro.Tile, sound.primary, on))
+            .combinedClickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Switch,
+                onLongClickLabel = "Dettagli",
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDetails()
+                },
+            ) {
+                haptic.performHapticFeedback(if (active) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
+                onToggle()
+            },
+    ) {
+        Column(Modifier.fillMaxSize().padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 8.dp)) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                AnimatedContent(
+                    targetState = face,
+                    transitionSpec = {
+                        (slideInVertically(tween(450)) { it } + fadeIn(tween(300))) togetherWith
+                            (slideOutVertically(tween(450)) { -it } + fadeOut(tween(300)))
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    label = "tileFace",
+                ) { f ->
+                    Box(Modifier.fillMaxSize()) {
+                        if (f == 0) {
+                            Icon(
+                                sound.icon,
+                                contentDescription = sound.name,
+                                tint = lerp(sound.secondary, Color.White, on),
+                                modifier = Modifier.align(Alignment.Center).size(46.dp),
+                            )
+                        } else {
+                            Text(
+                                sound.tagline.lowercase(),
+                                style = MaterialTheme.typography.titleLarge.copy(fontSize = MaterialTheme.typography.titleLarge.fontSize * 0.68f),
+                                color = Color.White,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+                if (active) {
+                    // Contatore in alto a destra, come le notifiche sulle tile.
+                    Text(
+                        "${(volume * 100).roundToInt()}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.TopEnd),
+                    )
+                }
+            }
+            Text(
+                sound.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.75f + 0.25f * on),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            AnimatedVisibility(active) {
+                VolumeSlider(
+                    value = volume,
+                    onValueChange = onVolumeChange,
+                    primary = sound.primary,
+                    secondary = sound.secondary,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+            }
+        }
     }
 }

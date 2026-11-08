@@ -27,7 +27,12 @@ import kotlin.math.sin
 import kotlin.random.Random
 @Composable
 fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
-    if (Look.skeuo) SkeuoAuroraBackground(colors, playing, modifier) else ClassicAuroraBackground(colors, playing, modifier)
+    when {
+        Look.skeuo -> SkeuoAuroraBackground(colors, playing, modifier)
+        // Metro: nero assoluto, come lo sfondo scuro di Windows Phone.
+        Look.metro -> androidx.compose.foundation.layout.Box(modifier.background(Color.Black))
+        else -> ClassicAuroraBackground(colors, playing, modifier)
+    }
 }
 
 private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF5B2C83))

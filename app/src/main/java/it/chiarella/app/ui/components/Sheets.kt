@@ -196,7 +196,7 @@ private fun CustomTimer(initial: Int, onStart: (Int) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
-            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp), Color(0x88000000)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
+            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp), Color(0x88000000)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
             .padding(18.dp)
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
@@ -210,7 +210,7 @@ private fun CustomTimer(initial: Int, onStart: (Int) -> Unit) {
                 Text(formatMinutes(it), style = MaterialTheme.typography.titleLarge, color = Palette.Text)
             }
         }
-        if (Look.skeuo) {
+        if (Look.skeuo || Look.metro) {
             // Stesso fader dei suoni: 5 min - 4 h a passi di 5 minuti.
             VolumeSlider(
                 value = (minutes - 5f) / 235f,
@@ -247,7 +247,7 @@ private fun TimerChip(label: String, modifier: Modifier = Modifier, danger: Bool
     Box(
         modifier
             .height(52.dp)
-            .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = false).then(if (danger) Modifier.background(Color(0x33FF6B81)) else Modifier) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f)).border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp)) })
+            .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = false).then(if (danger) Modifier.background(Color(0x33FF6B81)) else Modifier) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f)).border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp)) }, metro = { this.border(2.dp, if (danger) Color(0xFFFF9AA9) else Palette.Text) })
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -261,7 +261,7 @@ fun GradientButton(label: String, modifier: Modifier = Modifier, enabled: Boolea
     Box(
         modifier
             .height(54.dp)
-            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) })
+            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) }, metro = { this.background(Palette.Lavender.copy(alpha = alpha)) })
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -303,7 +303,7 @@ fun SavePresetSheet(
                 onValueChange = { name = it.take(32) },
                 label = { Text("Nome del profilo") },
                 singleLine = true,
-                shape = RoundedCornerShape(18.dp),
+                shape = if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = if (Look.skeuo) Color(0x80000000) else Color.Transparent,
             unfocusedContainerColor = if (Look.skeuo) Color(0x66000000) else Color.Transparent,
@@ -405,7 +405,7 @@ fun MasterVolumeSheet(
                         Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .look(skeuo = { this.keyCap(RoundedCornerShape(12.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) })
+                            .look(skeuo = { this.keyCap(RoundedCornerShape(12.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) }, metro = { this.background(c1.copy(alpha = bg)).border(2.dp, Palette.Text) })
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
                                 onChange(level)

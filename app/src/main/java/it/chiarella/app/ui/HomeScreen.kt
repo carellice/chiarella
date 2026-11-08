@@ -2,6 +2,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.metroTilt
 import androidx.compose.material3.AlertDialog
 import it.chiarella.app.ui.theme.glossyCap
 import it.chiarella.app.ui.theme.leather
@@ -173,8 +174,8 @@ fun HomeScreen(
                 top = topInset + 12.dp,
                 bottom = bottomInset + 128.dp,
             ),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (Look.metro) 8.dp else 12.dp),
+            verticalArrangement = Arrangement.spacedBy(if (Look.metro) 8.dp else 12.dp),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "header") {
                 Header(
@@ -253,8 +254,8 @@ fun HomeScreen(
             visible = state.hasMix,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                // Metro: la application bar va da bordo a bordo e gestisce da sé la barra di navigazione.
+                .then(if (Look.metro) Modifier else Modifier.navigationBarsPadding().padding(horizontal = 14.dp, vertical = 12.dp)),
             enter = slideInVertically(spring(dampingRatio = 0.72f, stiffness = 300f)) { it * 2 } + fadeIn(),
             exit = slideOutVertically(tween(320)) { it * 2 } + fadeOut(tween(250)),
         ) {
@@ -357,7 +358,7 @@ private fun Header(
     }
     Column(modifier.padding(top = 8.dp, bottom = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(greeting.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.TextMuted)
+            Text(if (Look.metro) "CHIARELLA  ·  ${greeting.uppercase()}" else greeting.uppercase(), style = MaterialTheme.typography.labelSmall, color = if (Look.metro) Palette.Text else Palette.TextMuted)
             Spacer(Modifier.weight(1f))
             RoundIconButton(Icons.Rounded.Settings, "Impostazioni", 38.dp, onPreferences)
             Spacer(Modifier.width(8.dp))
@@ -368,7 +369,7 @@ private fun Header(
             RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, "Come funziona", 38.dp, onShowGuide)
         }
         Spacer(Modifier.height(2.dp))
-        Text("Trova la tua quiete", style = MaterialTheme.typography.displaySmall, color = Palette.Text)
+        Text(if (Look.metro) "trova la tua quiete" else "Trova la tua quiete", style = MaterialTheme.typography.displaySmall, color = Palette.Text)
         Spacer(Modifier.height(10.dp))
         val status = when {
             !state.hasMix -> 0
@@ -414,7 +415,7 @@ private fun SectionTitle(
             .padding(top = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, color = Palette.Text)
+        Text(if (Look.metro) title.lowercase() else title, style = MaterialTheme.typography.titleLarge, color = Palette.Text)
         Spacer(Modifier.weight(1f))
         AnimatedContent(
             targetState = hint,
@@ -445,8 +446,10 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         label = "relaxGlow",
     )
     val shape = RoundedCornerShape(26.dp)
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
         modifier
+            .metroTilt(interaction)
             .padding(top = 6.dp)
             .fillMaxWidth()
             .look(
@@ -460,8 +463,9 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
                         )
                         .border(1.dp, Palette.GlassBorder, shape)
                 },
+                metro = { background(Palette.Lavender) },
             )
-            .clickable(onClick = onClick)
+            .clickable(interaction, indication = if (Look.metro) null else androidx.compose.material3.ripple(), onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -469,7 +473,7 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }),
+                .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.SelfImprovement, null, tint = Color.White, modifier = Modifier.size(26.dp))
@@ -479,10 +483,10 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Text("Un momento per te", style = MaterialTheme.typography.titleMedium, color = Palette.Text)
             Text(
                 "Respira un minuto, poi ti dico cosa fare per rilassarti",
-                style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted,
+                style = MaterialTheme.typography.bodySmall, color = if (Look.metro) Color.White.copy(alpha = 0.85f) else Palette.TextMuted,
             )
         }
-        Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, tint = Palette.TextMuted, modifier = Modifier.size(20.dp))
+        Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, tint = if (Look.metro) Color.White else Palette.TextMuted, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -490,11 +494,19 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun Modifier.introStep(progress: Float, step: Int): Modifier {
     val distance = with(LocalDensity.current) { 36.dp.toPx() }
+    val metro = Look.metro
     return graphicsLayer {
         val start = step * 0.07f
         val local = ((progress - start) / 0.45f).coerceIn(0f, 1f)
         val eased = FastOutSlowInEasing.transform(local)
         alpha = eased
+        if (metro) {
+            // "Turnstile" di Windows Phone: ogni riga ruota sul bordo sinistro come una porta girevole.
+            rotationY = (1f - eased) * -80f
+            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+            cameraDistance = 16f * density
+            return@graphicsLayer
+        }
         translationY = (1f - eased) * distance
         val s = 0.94f + 0.06f * eased
         scaleX = s

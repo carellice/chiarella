@@ -2,6 +2,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.metroTilt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.draw.drawBehind
 import it.chiarella.app.ui.theme.metalCap
@@ -447,7 +448,7 @@ private fun Conversation(
                         onValueChange = { draft = it.take(2000) },
                         placeholder = { Text("Scrivi o manda un vocale…", color = Palette.TextFaint) },
                         maxLines = 5,
-                        shape = RoundedCornerShape(26.dp),
+                        shape = if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(26.dp),
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Palette.Lavender,
@@ -537,7 +538,7 @@ private fun RecordingBar(recorder: VoiceRecorder, onCancel: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .look(skeuo = { this.leather(RoundedCornerShape(28.dp), elevation = 8.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(28.dp)).background(Palette.Surface.copy(alpha = 0.85f)) })
+            .look(skeuo = { this.leather(RoundedCornerShape(28.dp), elevation = 8.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(28.dp)).background(Palette.Surface.copy(alpha = 0.85f)) }, metro = { this.background(Palette.Surface).border(2.dp, Palette.TextFaint) })
             .border(1.dp, Palette.Lavender.copy(alpha = 0.4f + 0.4f * level), RoundedCornerShape(28.dp))
             .padding(start = 6.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -691,7 +692,7 @@ private fun UserBubble(text: String, voice: Boolean) {
         Column(
             Modifier
                 .padding(start = 48.dp)
-                .look(skeuo = { this.brassPlate(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp), elevation = 4.dp).drawBehind { glassGlare(0.35f) } }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp)).background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.9f), Palette.Sky.copy(alpha = 0.75f)))) })
+                .look(skeuo = { this.brassPlate(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp), elevation = 4.dp).drawBehind { glassGlare(0.35f) } }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp)).background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.9f), Palette.Sky.copy(alpha = 0.75f)))) }, metro = { this.background(Palette.Lavender) })
                 .padding(horizontal = 16.dp, vertical = 11.dp),
         ) {
             if (voice) {
@@ -726,7 +727,7 @@ private fun AssistantBubble(message: ChatMessage, showActions: Boolean, mix: Mix
             style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
             color = Palette.Text,
             modifier = Modifier
-                .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)) })
+                .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)) }, metro = { this.background(Palette.Glass) })
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
         val actions = message.actions
@@ -770,6 +771,7 @@ private fun ActionChip(action: ChatAction, mix: Mixer.State, onAction: (ChatActi
                         )
                         .border(1.dp, if (done) Palette.GlassBorder else Palette.Lavender.copy(alpha = 0.6f), shape)
                 },
+                metro = { if (done) border(2.dp, Palette.TextFaint) else background(Palette.Lavender) },
             )
             .clickable(enabled = !done) {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -793,7 +795,7 @@ private fun ActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Box(
         Modifier
             .size(26.dp)
-            .look(skeuo = { this.glossyCap(Color(0xFF7A4A1E), elevation = 2.dp) }, classic = { this.clip(CircleShape).background(BrassBrush) }),
+            .look(skeuo = { this.glossyCap(Color(0xFF7A4A1E), elevation = 2.dp) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, null, tint = Color.White, modifier = Modifier.size(15.dp))
@@ -806,7 +808,7 @@ private fun EventNote(text: String) {
         Row(
             Modifier
                 .widthIn(max = 320.dp)
-                .look(skeuo = { this.recessed(RoundedCornerShape(16.dp)) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.05f)) })
+                .look(skeuo = { this.recessed(RoundedCornerShape(16.dp)) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -823,8 +825,8 @@ private fun TypingBubble(modifier: Modifier = Modifier) {
     val t by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1100)), label = "typingT")
     Row(
         modifier
-            .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)) })
-            .border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
+            .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)) }, metro = { this.background(Palette.Glass) })
+            .border(1.dp, if (Look.metro) Color.Transparent else Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -917,8 +919,8 @@ private fun AiSetup(ai: AiChat, onSaved: () -> Unit, onCancel: (() -> Unit)?) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
-                .border(1.dp, Palette.GlassBorder, RoundedCornerShape(24.dp))
+                .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
+                .border(1.dp, if (Look.metro) Color.Transparent else Palette.GlassBorder, RoundedCornerShape(24.dp))
                 .padding(18.dp)
         ) {
             Text("Come ottenerli", style = MaterialTheme.typography.titleMedium, color = Palette.Text)
@@ -988,12 +990,12 @@ private fun AiSetup(ai: AiChat, onSaved: () -> Unit, onCancel: (() -> Unit)?) {
                 Column(
                     Modifier
                         .weight(1f)
-                        .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f)).border(1.dp, border, RoundedCornerShape(18.dp)) })
+                        .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f)).border(1.dp, border, RoundedCornerShape(18.dp)) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) })
                         .clickable { model = m.id }
                         .padding(12.dp)
                 ) {
                     Text(m.label, style = MaterialTheme.typography.titleSmall.copy(shadow = if (selected) null else MaterialTheme.typography.titleSmall.shadow), color = if (selected && Look.skeuo) Skeuo.Ink else Palette.Text)
-                    Text(m.hint, style = MaterialTheme.typography.bodySmall.copy(shadow = if (selected) null else MaterialTheme.typography.bodySmall.shadow), color = if (selected && Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Palette.TextMuted)
+                    Text(m.hint, style = MaterialTheme.typography.bodySmall.copy(shadow = if (selected) null else MaterialTheme.typography.bodySmall.shadow), color = if (selected && Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else if (selected && Look.metro) Color.White.copy(alpha = 0.85f) else Palette.TextMuted)
                 }
             }
         }
@@ -1053,7 +1055,7 @@ private fun SetupField(
         ),
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
         trailingIcon = trailing,
-        shape = RoundedCornerShape(18.dp),
+        shape = if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(18.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Palette.Lavender,
             unfocusedBorderColor = Palette.GlassBorder,
@@ -1070,8 +1072,10 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "chatCard")
     val glow by transition.animateFloat(0.6f, 1f, infiniteRepeatable(tween(4600), RepeatMode.Reverse), label = "chatGlow")
     val shape = RoundedCornerShape(26.dp)
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
         modifier
+            .metroTilt(interaction)
             .fillMaxWidth()
             .look(
                 skeuo = { leather(shape, elevation = 8.dp, tint = Color(0xFFEC4899).copy(alpha = 0.08f * glow)) },
@@ -1084,8 +1088,9 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
                         )
                         .border(1.dp, Palette.GlassBorder, shape)
                 },
+                metro = { background(it.chiarella.app.ui.theme.Metro.Magenta) },
             )
-            .clickable(onClick = onClick)
+            .clickable(interaction, indication = if (Look.metro) null else androidx.compose.material3.ripple(), onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1093,7 +1098,7 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFFEC4899), Palette.Lavender))) }),
+                .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFFEC4899), Palette.Lavender))) }, metro = { this }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.EditNote, null, tint = Color.White, modifier = Modifier.size(26.dp))
@@ -1103,9 +1108,9 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Text("Parla con Chiarella", style = MaterialTheme.typography.titleMedium, color = Palette.Text)
             Text(
                 "Troppi pensieri? Scrivimi e li mettiamo in ordine",
-                style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted,
+                style = MaterialTheme.typography.bodySmall, color = if (Look.metro) Color.White.copy(alpha = 0.85f) else Palette.TextMuted,
             )
         }
-        Icon(Icons.AutoMirrored.Rounded.Send, null, tint = Palette.TextMuted, modifier = Modifier.size(20.dp))
+        Icon(Icons.AutoMirrored.Rounded.Send, null, tint = if (Look.metro) Color.White else Palette.TextMuted, modifier = Modifier.size(20.dp))
     }
 }

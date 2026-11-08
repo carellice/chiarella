@@ -287,8 +287,8 @@ private fun PassionsEditor(
                     Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()
-                        .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
-                        .border(1.dp, Palette.GlassBorder, RoundedCornerShape(24.dp))
+                        .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) }, metro = { this.background(Palette.Glass) })
+                        .border(1.dp, if (Look.metro) Color.Transparent else Palette.GlassBorder, RoundedCornerShape(24.dp))
                         .padding(18.dp)
                 ) {
                     Text(c.label, style = MaterialTheme.typography.titleMedium, color = Palette.Text)
@@ -303,7 +303,7 @@ private fun PassionsEditor(
                         onValueChange = { detail = it.take(40) },
                         placeholder = { Text("Es. ${detailExample(c)}", color = Palette.TextFaint) },
                         singleLine = true,
-                        shape = RoundedCornerShape(18.dp),
+                        shape = if (Look.metro) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(18.dp),
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { add() }),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -373,7 +373,7 @@ private fun CategoryChip(category: PassionCategory, selected: Boolean, onClick: 
     Row(
         Modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .look(skeuo = { this.keyCap(CircleShape, brass = selected, elevation = 3.dp) }, classic = { this.clip(CircleShape).background(bg).border(1.dp, border, CircleShape) })
+            .look(skeuo = { this.keyCap(CircleShape, brass = selected, elevation = 3.dp) }, classic = { this.clip(CircleShape).background(bg).border(1.dp, border, CircleShape) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) })
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -396,7 +396,7 @@ private fun PassionRow(passion: Passion, onDelete: () -> Unit) {
                 translationY = (1f - appear.value) * 40f
             }
             .fillMaxWidth()
-            .look(skeuo = { this.leather(RoundedCornerShape(20.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp)) })
+            .look(skeuo = { this.leather(RoundedCornerShape(20.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp)) }, metro = { this.background(Palette.Glass) })
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -425,7 +425,7 @@ private fun PassionBadge(category: PassionCategory, size: androidx.compose.ui.un
     Box(
         Modifier
             .size(size)
-            .look(skeuo = { this.glossyCap(category.primary, elevation = 4.dp) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(category.primary, category.secondary))) }),
+            .look(skeuo = { this.glossyCap(category.primary, elevation = 4.dp) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(category.primary, category.secondary))) }, metro = { this.background(category.primary) }),
         contentAlignment = Alignment.Center,
     ) {
         Icon(category.icon, null, tint = Color.White, modifier = Modifier.size(size * 0.5f))
@@ -550,7 +550,7 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
                     Modifier
                         .height(8.dp)
                         .width(8.dp + 18.dp * done)
-                        .look(skeuo = { this.recessed(CircleShape).background(Skeuo.Amber.copy(alpha = 0.9f * done)) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.18f + 0.6f * done)) })
+                        .look(skeuo = { this.recessed(CircleShape).background(Skeuo.Amber.copy(alpha = 0.9f * done)) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.18f + 0.6f * done)) }, metro = { this.background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.18f), Palette.Lavender, done)) })
                 )
             }
         }
@@ -571,7 +571,11 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
 /** Fiore di sei petali luminosi che si apre con l'inspirazione e si chiude con l'espirazione. */
 @Composable
 private fun BreathFlower(breath: Float, modifier: Modifier = Modifier) {
-    if (Look.skeuo) SkeuoBreathFlower(breath = breath, modifier = modifier) else ClassicBreathFlower(breath = breath, modifier = modifier)
+    when {
+        Look.skeuo -> SkeuoBreathFlower(breath = breath, modifier = modifier)
+        Look.metro -> MetroBreathTiles(breath = breath, modifier = modifier)
+        else -> ClassicBreathFlower(breath = breath, modifier = modifier)
+    }
 }
 
 @Composable
@@ -839,5 +843,33 @@ private fun SecondaryAction(
             Spacer(Modifier.width(6.dp))
         }
         Text(label, style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+    }
+}
+
+/**
+ * Respiro in stile Metro: quattro riquadri a tinta unita che si allontanano dal centro
+ * con l'inspirazione e si ricompongono in un'unica tile con l'espirazione.
+ */
+@Composable
+private fun MetroBreathTiles(breath: Float, modifier: Modifier = Modifier) {
+    val colors = listOf(Color(0xFF1BA1E2), Color(0xFF00ABA9), Color(0xFF6A00FF), Color(0xFFD80073))
+    Canvas(modifier) {
+        val half = size.minDimension / 2
+        val tile = half * (0.38f + 0.14f * breath)
+        val gap = half * (0.02f + 0.30f * breath)
+        val c = center
+        listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEachIndexed { i, (dx, dy) ->
+            val x = c.x + (if (dx < 0) -tile - gap / 2 else gap / 2)
+            val y = c.y + (if (dy < 0) -tile - gap / 2 else gap / 2)
+            drawRect(colors[i].copy(alpha = 0.55f + 0.45f * breath), androidx.compose.ui.geometry.Offset(x, y), androidx.compose.ui.geometry.Size(tile, tile))
+        }
+        // Cornice sottile che segna lo spazio pieno del respiro.
+        val frame = half * 1.0f
+        drawRect(
+            Color.White.copy(alpha = 0.18f),
+            androidx.compose.ui.geometry.Offset(c.x - frame, c.y - frame),
+            androidx.compose.ui.geometry.Size(frame * 2, frame * 2),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f * density),
+        )
     }
 }

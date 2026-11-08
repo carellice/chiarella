@@ -1,6 +1,14 @@
 package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.Metro
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import android.graphics.Color
 import android.media.AudioManager
 import android.os.Bundle
@@ -37,7 +45,7 @@ class MainActivity : ComponentActivity() {
         volumeControlStream = AudioManager.STREAM_MUSIC
         val app = application as ChiarellaApp
         Motion.reduced = app.store.preferences.value.reducedAnimations
-        Look.skeuo = app.store.preferences.value.skeuomorphism
+        Look.style = app.store.preferences.value.style
 
         // Uscita dallo splash: l'icona si espande e svanisce.
         splash.setOnExitAnimationListener { provider ->
@@ -70,10 +78,10 @@ class MainActivity : ComponentActivity() {
             val preferences by app.store.preferences.collectAsStateWithLifecycle()
             // Letti qui (non dentro SideEffect) così un cambio nelle impostazioni ricompone e si applica subito.
             val reduced = preferences.reducedAnimations
-            val skeuo = preferences.skeuomorphism
+            val style = preferences.style
             SideEffect {
                 Motion.reduced = reduced
-                Look.skeuo = skeuo
+                Look.style = style
             }
             ChiarellaTheme {
                 var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
@@ -82,11 +90,37 @@ class MainActivity : ComponentActivity() {
                 AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
-                        (fadeIn(tween(600, delayMillis = 150)) + scaleIn(tween(600, delayMillis = 150), initialScale = 0.96f)) togetherWith
-                            (fadeOut(tween(350)) + scaleOut(tween(350), targetScale = 1.04f))
+                        if (Look.metro) {
+                            // La rotazione la fa il turnstile qui sotto: le dissolvenze seguono i suoi tempi.
+                            fadeIn(tween(1, delayMillis = 230)) togetherWith fadeOut(tween(1, delayMillis = 220))
+                        } else {
+                            (fadeIn(tween(600, delayMillis = 150)) + scaleIn(tween(600, delayMillis = 150), initialScale = 0.96f)) togetherWith
+                                (fadeOut(tween(350)) + scaleOut(tween(350), targetScale = 1.04f))
+                        }
                     },
                     label = "screen",
                 ) { current ->
+                    // Turnstile di Windows Phone: la pagina esce ruotando sul bordo sinistro e la nuova entra allo stesso modo.
+                    val turn by transition.animateFloat(
+                        transitionSpec = {
+                            if (targetState == EnterExitState.Visible) tween(350, delayMillis = 230, easing = Metro.Ease)
+                            else tween(220, easing = FastOutLinearInEasing)
+                        },
+                        label = "turnstile",
+                    ) { state ->
+                        when (state) {
+                            EnterExitState.PreEnter -> -80f
+                            EnterExitState.Visible -> 0f
+                            EnterExitState.PostExit -> 90f
+                        }
+                    }
+                    Box(Modifier.graphicsLayer {
+                        if (Look.metro && !Motion.reduced) {
+                            rotationY = turn
+                            transformOrigin = TransformOrigin(0f, 0.5f)
+                            cameraDistance = 14f * density
+                        }
+                    }) {
                     when (current) {
                         Screen.GUIDE -> OnboardingScreen(onFinish = {
                             app.store.onboardingDone = true
@@ -118,6 +152,7 @@ class MainActivity : ComponentActivity() {
                             onRelax = { screen = Screen.RELAX },
                             onChat = { screen = Screen.CHAT },
                         )
+                    }
                     }
                 }
                 if (screen != Screen.GUIDE) SystemVolumeNotice(

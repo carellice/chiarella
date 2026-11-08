@@ -322,13 +322,28 @@ fun Modifier.lcd(shape: Shape): Modifier = this
 private val Brass = Brush.verticalGradient(listOf(Skeuo.BrassLight, Skeuo.Brass, Color(0xFFA9823F)))
 
 /** Ottone nello stile skeuomorfico, il gradiente lavanda-cielo in quello classico. */
-val BrassBrush: Brush get() = if (Look.skeuo) Brass else Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))
+val BrassBrush: Brush get() = when {
+    Look.skeuo -> Brass
+    Look.metro -> androidx.compose.ui.graphics.SolidColor(Palette.Lavender)
+    else -> Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))
+}
 
 /** Tasto rettangolare in ottone (o metallo scuro) con bordo smussato. */
 fun Modifier.keyCap(shape: Shape, brass: Boolean, elevation: Dp = 5.dp): Modifier =
     if (brass) brassPlate(shape, elevation)
     else brushedMetal(shape, dark = true, elevation = elevation)
 
-/** Ramo per stile: nella catena dei modifier applica [skeuo] o [classic] secondo Look.skeuo. */
+/** Ramo per stile: applica [skeuo], [metro] o [classic] secondo Look.style. */
+inline fun Modifier.look(
+    skeuo: Modifier.() -> Modifier,
+    classic: Modifier.() -> Modifier,
+    metro: Modifier.() -> Modifier,
+): Modifier = when {
+    Look.skeuo -> skeuo()
+    Look.metro -> metro()
+    else -> classic()
+}
+
+/** Come sopra, ma lo stile Metro riusa il ramo [classic]. */
 inline fun Modifier.look(skeuo: Modifier.() -> Modifier, classic: Modifier.() -> Modifier): Modifier =
-    if (Look.skeuo) skeuo() else classic()
+    look(skeuo, classic, classic)
