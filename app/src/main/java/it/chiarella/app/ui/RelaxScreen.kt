@@ -1,5 +1,12 @@
 package it.chiarella.app.ui
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.glossyCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.recessed
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -155,7 +162,8 @@ fun RelaxScreen(
     val picked = passions.firstOrNull { it.id == pickedId }
     val auraColors = when (step) {
         RelaxStep.PASSIONS -> emptyList()
-        RelaxStep.BREATHE -> listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6))
+        RelaxStep.BREATHE -> if (Look.skeuo) listOf(Color(0xFFFFB648), Color(0xFFE5794F), Color(0xFF6FB3A0))
+            else listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6))
         RelaxStep.REVEAL -> picked?.let { listOf(it.category.primary, it.category.secondary, it.category.primary) } ?: emptyList()
     }
 
@@ -279,8 +287,7 @@ private fun PassionsEditor(
                     Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
+                        .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
                         .border(1.dp, Palette.GlassBorder, RoundedCornerShape(24.dp))
                         .padding(18.dp)
                 ) {
@@ -300,6 +307,8 @@ private fun PassionsEditor(
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { add() }),
                         colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = if (Look.skeuo) Color(0x80000000) else Color.Transparent,
+            unfocusedContainerColor = if (Look.skeuo) Color(0x66000000) else Color.Transparent,
                             focusedBorderColor = c.primary,
                             unfocusedBorderColor = Palette.GlassBorder,
                             cursorColor = c.primary,
@@ -364,16 +373,14 @@ private fun CategoryChip(category: PassionCategory, selected: Boolean, onClick: 
     Row(
         Modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(CircleShape)
-            .background(bg)
-            .border(1.dp, border, CircleShape)
+            .look(skeuo = { this.keyCap(CircleShape, brass = selected, elevation = 3.dp) }, classic = { this.clip(CircleShape).background(bg).border(1.dp, border, CircleShape) })
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(category.icon, null, tint = if (selected) Color.White else category.secondary, modifier = Modifier.size(18.dp))
+        Icon(category.icon, null, tint = if (selected) (if (Look.skeuo) Skeuo.Ink else Color.White) else category.secondary, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text(category.label, style = MaterialTheme.typography.labelLarge, color = Palette.Text)
+        Text(category.label, style = MaterialTheme.typography.labelLarge.copy(shadow = if (selected) null else MaterialTheme.typography.labelLarge.shadow), color = if (selected && Look.skeuo) Skeuo.Ink else Palette.Text)
     }
 }
 
@@ -389,9 +396,7 @@ private fun PassionRow(passion: Passion, onDelete: () -> Unit) {
                 translationY = (1f - appear.value) * 40f
             }
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp))
+            .look(skeuo = { this.leather(RoundedCornerShape(20.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp)) })
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -420,8 +425,7 @@ private fun PassionBadge(category: PassionCategory, size: androidx.compose.ui.un
     Box(
         Modifier
             .size(size)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(category.primary, category.secondary))),
+            .look(skeuo = { this.glossyCap(category.primary, elevation = 4.dp) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(category.primary, category.secondary))) }),
         contentAlignment = Alignment.Center,
     ) {
         Icon(category.icon, null, tint = Color.White, modifier = Modifier.size(size * 0.5f))
@@ -532,7 +536,11 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
             transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(250)) },
             label = "seconds",
         ) { s ->
-            Text("$s", style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light, fontSize = 40.sp), color = Palette.Text)
+            if (Look.skeuo) {
+                Text("$s", style = MaterialTheme.typography.displaySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Light, fontSize = 40.sp, shadow = androidx.compose.ui.graphics.Shadow(Color(0xCCFF9A1F), androidx.compose.ui.geometry.Offset.Zero, 18f)), color = Skeuo.Amber)
+            } else {
+                Text("$s", style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light, fontSize = 40.sp), color = Palette.Text)
+            }
         }
         Spacer(Modifier.height(14.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -542,8 +550,7 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
                     Modifier
                         .height(8.dp)
                         .width(8.dp + 18.dp * done)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.18f + 0.6f * done))
+                        .look(skeuo = { this.recessed(CircleShape).background(Skeuo.Amber.copy(alpha = 0.9f * done)) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.18f + 0.6f * done)) })
                 )
             }
         }
@@ -564,6 +571,11 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
 /** Fiore di sei petali luminosi che si apre con l'inspirazione e si chiude con l'espirazione. */
 @Composable
 private fun BreathFlower(breath: Float, modifier: Modifier = Modifier) {
+    if (Look.skeuo) SkeuoBreathFlower(breath = breath, modifier = modifier) else ClassicBreathFlower(breath = breath, modifier = modifier)
+}
+
+@Composable
+private fun ClassicBreathFlower(breath: Float, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "flower")
     val spin by transition.animateFloat(
         0f, (2 * PI).toFloat(), infiniteRepeatable(tween(40_000, easing = LinearEasing)), label = "spin",
@@ -608,6 +620,75 @@ private fun BreathFlower(breath: Float, modifier: Modifier = Modifier) {
             val r = maxR * dr * (0.7f + 0.3f * breath)
             drawCircle(
                 Color.White.copy(alpha = 0.35f + 0.4f * shimmer * breath),
+                radius = sz * density, center = Offset(c.x + cos(a) * r, c.y + sin(a) * r),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SkeuoBreathFlower(breath: Float, modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "flower")
+    val spin by transition.animateFloat(
+        0f, (2 * PI).toFloat(), infiniteRepeatable(tween(40_000, easing = LinearEasing)), label = "spin",
+    )
+    val shimmer by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(3_000), RepeatMode.Reverse), label = "shimmer")
+    val petals = listOf(Color(0xFFFFB648), Color(0xFFE5794F), Color(0xFF6FB3A0), Color(0xFFF6DFA4), Color(0xFFD9466F), Color(0xFF9FD3C4))
+    val sparks = remember {
+        val r = Random(11)
+        List(18) { Triple(r.nextFloat() * 6.28f, 0.75f + r.nextFloat() * 0.35f, 1f + r.nextFloat() * 2f) }
+    }
+
+    Canvas(modifier) {
+        val c = center
+        val maxR = size.minDimension / 2
+        val petalR = maxR * (0.24f + 0.14f * breath)
+        val dist = maxR * (0.04f + 0.26f * breath)
+
+        // Quadrante in ottone con vetro scuro, come un vecchio barometro.
+        val bezel = maxR * 0.98f
+        drawCircle(Color(0xAA000000), bezel * 1.02f, c + Offset(0f, 8.dp.toPx()))
+        drawCircle(Brush.sweepGradient(listOf(Skeuo.BrassLight, Skeuo.BrassDark, Skeuo.Brass, Skeuo.BrassDark, Skeuo.BrassLight), c), bezel, c)
+        drawCircle(Brush.verticalGradient(listOf(Color(0x55FFFFFF), Color(0x66000000))), bezel, c)
+        val face = bezel * 0.9f
+        drawCircle(Brush.radialGradient(listOf(Color(0xFF2E1E12), Color(0xFF0E0805)), c, face), face, c)
+        repeat(60) { i ->
+            val a = i * (2 * PI.toFloat() / 60f)
+            val long = i % 5 == 0
+            val r1 = face * (if (long) 0.86f else 0.91f)
+            drawLine(
+                Skeuo.Brass.copy(alpha = if (long) 0.8f else 0.4f),
+                Offset(c.x + cos(a) * r1, c.y + sin(a) * r1), Offset(c.x + cos(a) * face * 0.96f, c.y + sin(a) * face * 0.96f),
+                (if (long) 2.dp else 1.dp).toPx(),
+            )
+        }
+        // Alone che respira.
+        drawCircle(
+            Brush.radialGradient(
+                0f to Color(0xFFFFB648).copy(alpha = 0.35f + 0.2f * breath),
+                1f to Color.Transparent,
+                center = c, radius = maxR * (0.7f + 0.3f * breath),
+            ),
+            radius = maxR * (0.7f + 0.3f * breath), center = c,
+        )
+        petals.forEachIndexed { i, color ->
+            val a = spin * 0.6f + i * (PI.toFloat() / 3f) + breath * 0.5f
+            val pc = Offset(c.x + cos(a) * dist, c.y + sin(a) * dist)
+            drawCircle(
+                Brush.radialGradient(
+                    0f to color.copy(alpha = 0.55f),
+                    1f to color.copy(alpha = 0.12f),
+                    center = pc, radius = petalR,
+                ),
+                radius = petalR, center = pc,
+            )
+        }
+        drawCircle(Skeuo.BrassLight.copy(alpha = 0.25f + 0.15f * shimmer), radius = face * (0.7f + 0.1f * breath), center = c, style = Stroke(1.dp.toPx()))
+        sparks.forEach { (angle, dr, sz) ->
+            val a = angle + spin * (0.8f + dr * 0.2f)
+            val r = face * dr * (0.6f + 0.2f * breath)
+            drawCircle(
+                Skeuo.Amber.copy(alpha = 0.35f + 0.4f * shimmer * breath),
                 radius = sz * density, center = Offset(c.x + cos(a) * r, c.y + sin(a) * r),
             )
         }
@@ -747,8 +828,7 @@ private fun SecondaryAction(
     Row(
         modifier
             .height(50.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.07f))
+            .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.07f)) })
             .border(1.dp, Palette.GlassBorder, CircleShape)
             .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center,

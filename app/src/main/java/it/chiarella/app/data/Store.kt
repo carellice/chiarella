@@ -24,12 +24,14 @@ class Store(context: Context) {
     private val _preferences = MutableStateFlow(AppPreferences(
         showVolumeNotice = prefs.getBoolean("show_volume_notice", true),
         reducedAnimations = prefs.getBoolean("reduced_animations", false),
+        skeuomorphism = prefs.getBoolean("skeuomorphism", false),
     ))
     val preferences: StateFlow<AppPreferences> = _preferences.asStateFlow()
 
     fun setPreferences(value: AppPreferences) {
         prefs.edit().putBoolean("show_volume_notice", value.showVolumeNotice)
-            .putBoolean("reduced_animations", value.reducedAnimations).apply()
+            .putBoolean("reduced_animations", value.reducedAnimations)
+            .putBoolean("skeuomorphism", value.skeuomorphism).apply()
         _preferences.value = value
     }
 

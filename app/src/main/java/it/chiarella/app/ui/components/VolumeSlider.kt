@@ -1,8 +1,6 @@
 package it.chiarella.app.ui.components
 
 import androidx.compose.animation.core.Spring
-import it.chiarella.app.ui.motion.animateFloatAsState
-import it.chiarella.app.ui.motion.spring
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -34,10 +32,23 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import it.chiarella.app.ui.motion.animateFloatAsState
+import it.chiarella.app.ui.motion.spring
+import it.chiarella.app.ui.theme.Look
+@Composable
+fun VolumeSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    primary: Color,
+    secondary: Color,
+    modifier: Modifier = Modifier,
+) {
+    if (Look.skeuo) SkeuoVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier) else ClassicVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier)
+}
 
 /** Slider a pillola con riempimento sfumato, pomello luminoso e piccoli "tick" aptici. */
 @Composable
-fun VolumeSlider(
+private fun ClassicVolumeSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
     primary: Color,
@@ -107,4 +118,96 @@ fun VolumeSlider(
             modifier = Modifier.padding(start = 8.dp).size(15.dp),
         )
     }
+}
+
+// ------------------------------------------------------------------ stile skeuomorfico
+
+/** Fader da mixer: scanalatura, scala graduata, cursore cromato e piccoli "tick" aptici. */
+@Composable
+private fun SkeuoVolumeSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    primary: Color,
+    secondary: Color,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = LocalHapticFeedback.current
+    val onChange by rememberUpdatedState(onValueChange)
+    var width by remember { mutableIntStateOf(1) }
+    var dragging by remember { mutableStateOf(false) }
+    var lastStep by remember { mutableIntStateOf((value * 10).toInt()) }
+    val shown by animateFloatAsState(
+        targetValue = value,
+        animationSpec = if (dragging) spring(stiffness = Spring.StiffnessHigh) else spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow),
+        label = "volume",
+    )
+    val thumb by animateFloatAsState(if (dragging) 1.25f else 1f, spring(dampingRatio = 0.45f), label = "thumb")
+
+    fun emit(x: Float) {
+        val v = (x / width).coerceIn(0f, 1f)
+        val step = (v * 10).toInt()
+        if (step != lastStep) {
+            lastStep = step
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+        onChange(v)
+    }
+
+    Box(
+        modifier
+            .height(30.dp)
+            .onSizeChanged { width = it.width.coerceAtLeast(1) }
+            .pointerInput(Unit) { detectTapGestures { emit(it.x) } }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { dragging = true; emit(it.x) },
+                    onDragEnd = { dragging = false },
+                    onDragCancel = { dragging = false },
+                ) { change, _ ->
+                    change.consume()
+                    emit(change.position.x)
+                }
+            }
+            .drawBehind {
+                // Fader da mixer: scanalatura incisa, tubo luminoso e cursore cromato.
+                val h = size.height
+                val capW = 16.dp.toPx() * thumb
+                val capH = h * 0.92f
+                val travel = size.width - 16.dp.toPx()
+                val x = 8.dp.toPx() + travel * shown
+                val grooveH = 7.dp.toPx()
+                val gy = h / 2 - grooveH / 2
+                val radius = CornerRadius(grooveH / 2)
+                // Tacche della scala.
+                for (i in 0..10) {
+                    val tx = 8.dp.toPx() + travel * i / 10f
+                    val long = i % 5 == 0
+                    drawLine(Color(0x66F2E3C4), Offset(tx, gy - (if (long) 5.dp else 3.dp).toPx()), Offset(tx, gy - 1.dp.toPx()), 1f)
+                }
+                drawRoundRect(Color(0xFF0A0705), Offset(0f, gy), Size(size.width, grooveH), radius)
+                drawRoundRect(
+                    Brush.verticalGradient(listOf(Color(0xCC000000), Color.Transparent, Color(0x33FFFFFF)), startY = gy, endY = gy + grooveH),
+                    Offset(0f, gy), Size(size.width, grooveH), radius,
+                )
+                if (x > 2f) {
+                    drawRoundRect(Brush.horizontalGradient(listOf(primary, secondary), 0f, x), Offset(1f, gy + 1.5f), Size(x, grooveH - 3f), radius)
+                    drawRoundRect(secondary.copy(alpha = 0.35f), Offset(1f, gy - 2f), Size(x, grooveH + 4f), CornerRadius(grooveH))
+                    drawRoundRect(Color.White.copy(alpha = 0.35f), Offset(2f, gy + 2f), Size(x - 2f, 1.5f))
+                }
+                // Cursore.
+                val left = x - capW / 2
+                val top = (h - capH) / 2
+                drawRoundRect(Color(0x99000000), Offset(left + 1f, top + 3f), Size(capW, capH), CornerRadius(4.dp.toPx()))
+                drawRoundRect(
+                    Brush.verticalGradient(listOf(Color(0xFFF7F4EF), Color(0xFFBDB7AF), Color(0xFF8A847D), Color(0xFFD9D4CD)), startY = top, endY = top + capH),
+                    Offset(left, top), Size(capW, capH), CornerRadius(4.dp.toPx()),
+                )
+                for (i in -2..2) {
+                    val ly = h / 2 + i * 3.dp.toPx()
+                    drawLine(Color(0x88000000), Offset(left + 3.dp.toPx(), ly), Offset(left + capW - 3.dp.toPx(), ly), 1.2f)
+                    drawLine(Color(0x99FFFFFF), Offset(left + 3.dp.toPx(), ly + 1.2f), Offset(left + capW - 3.dp.toPx(), ly + 1.2f), 1f)
+                }
+                drawLine(secondary, Offset(x, top + 2.dp.toPx()), Offset(x, top + 5.dp.toPx()), 2f)
+            },
+    )
 }

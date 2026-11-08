@@ -1,5 +1,16 @@
 package it.chiarella.app.ui
 
+
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.lcd
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.glossyCap
+import it.chiarella.app.ui.theme.brushedMetal
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.recessed
+import it.chiarella.app.ui.theme.BrassBrush
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -365,10 +376,20 @@ private fun WelcomeArt() {
                         style = Stroke(1.5.dp.toPx()),
                     )
                 }
-                drawCircle(
-                    Brush.radialGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Color.Transparent)),
-                    radius = size.minDimension * 0.45f,
-                )
+                if (Look.skeuo) {
+                    // Medaglione in ottone con il volto inciso al centro.
+                    val r = size.minDimension * 0.4f
+                    drawCircle(Color(0x99000000), r * 1.04f, center + Offset(0f, 6.dp.toPx()))
+                    drawCircle(Brush.sweepGradient(listOf(Skeuo.BrassLight, Skeuo.BrassDark, Skeuo.Brass, Skeuo.BrassDark, Skeuo.BrassLight)), r)
+                    drawCircle(Brush.verticalGradient(listOf(Color(0x55FFFFFF), Color(0x55000000))), r)
+                    drawCircle(Brush.radialGradient(listOf(Color(0xFF3A2618), Color(0xFF140C07)), radius = r * 0.86f), r * 0.86f)
+                    drawCircle(Color(0xAA000000), r * 0.86f, style = Stroke(2.dp.toPx()))
+                } else {
+                    drawCircle(
+                        Brush.radialGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Color.Transparent)),
+                        radius = size.minDimension * 0.45f,
+                    )
+                }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -392,8 +413,7 @@ private fun MiniTile(s: Sound, active: Boolean, modifier: Modifier = Modifier, t
     val shape = RoundedCornerShape(22.dp)
     Box(
         modifier
-            .clip(shape)
-            .background(Palette.Glass)
+            .look(skeuo = { this.brushedMetal(shape) }, classic = { this.clip(shape).background(Palette.Glass) })
             .drawBehind {
                 if (on > 0f) {
                     drawRect(
@@ -496,9 +516,7 @@ private fun VolumeRow(s: Sound, value: Float) {
         Modifier
             .fillMaxWidth()
             .height(112.dp)
-            .clip(shape)
-            .background(Brush.linearGradient(listOf(s.primary.copy(alpha = 0.5f), s.secondary.copy(alpha = 0.12f))))
-            .border(1.dp, s.secondary.copy(alpha = 0.6f), shape),
+            .look(skeuo = { this.brushedMetal(shape).background(Brush.linearGradient(listOf(s.primary.copy(alpha = 0.38f), s.secondary.copy(alpha = 0.08f)))) }, classic = { this.clip(shape).background(Brush.linearGradient(listOf(s.primary.copy(alpha = 0.5f), s.secondary.copy(alpha = 0.12f)))).border(1.dp, s.secondary.copy(alpha = 0.6f), shape) }),
     ) {
         AmbienceCanvas(s.ambience, s.primary, s.secondary, 0.35f + 0.65f * value, Modifier.matchParentSize())
         Column(Modifier.padding(16.dp)) {
@@ -530,9 +548,7 @@ private fun PlayerBarArt() {
         Row(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(30.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xF21E2444), Color(0xF2141933))))
-                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(30.dp))
+                .look(skeuo = { this.brushedMetal(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(30.dp)).background(Brush.verticalGradient(listOf(Color(0xF21E2444), Color(0xF2141933)))).border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(30.dp)) })
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -546,8 +562,7 @@ private fun PlayerBarArt() {
             Box(
                 Modifier
                     .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(sounds[0].primary, sounds[1].secondary))),
+                    .look(skeuo = { this.glossyCap(sounds[0].primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sounds[0].primary, sounds[1].secondary))) }),
                 contentAlignment = Alignment.Center,
             ) {
                 AnimatedContent(
@@ -629,9 +644,7 @@ private fun PresetsArt() {
                         scaleX = s
                         scaleY = s
                     }
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Brush.linearGradient(listOf(sounds[0].primary.copy(alpha = 0.4f + 0.2f * glow), sounds[1].primary.copy(alpha = 0.15f + 0.15f * glow))))
-                    .border((1f + glow).dp, Color.White.copy(alpha = 0.12f + 0.6f * glow), RoundedCornerShape(24.dp))
+                    .look(skeuo = { this.leather(RoundedCornerShape(24.dp), elevation = 10.dp, tint = sounds[0].primary.copy(alpha = 0.16f + 0.18f * glow)).border((1f + glow).dp, Skeuo.Brass.copy(alpha = 0.2f + 0.7f * glow), RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Brush.linearGradient(listOf(sounds[0].primary.copy(alpha = 0.4f + 0.2f * glow), sounds[1].primary.copy(alpha = 0.15f + 0.15f * glow)))).border((1f + glow).dp, Color.White.copy(alpha = 0.12f + 0.6f * glow), RoundedCornerShape(24.dp)) })
                     .padding(14.dp),
             ) {
                 Column {
@@ -695,10 +708,9 @@ private fun TimerArt() {
                 Text(
                     label,
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (on) Color.White else Palette.TextMuted,
+                    color = if (Look.skeuo) if (on) Skeuo.Ink else Palette.Text else if (on) Color.White else Palette.TextMuted,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (on) Palette.Lavender.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.07f))
+                        .look(skeuo = { this.keyCap(RoundedCornerShape(10.dp), brass = on) }, classic = { this.clip(RoundedCornerShape(14.dp)).background(if (on) Palette.Lavender.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.07f)) })
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
@@ -717,8 +729,7 @@ private fun ControlsArt() {
             // Chip "Live Update" della barra di stato.
             Row(
                 Modifier
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.14f))
+                    .look(skeuo = { this.lcd(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.14f)) })
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -731,8 +742,7 @@ private fun ControlsArt() {
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color(0xFF232A4A))
+                    .look(skeuo = { this.brushedMetal(RoundedCornerShape(18.dp)) }, classic = { this.clip(RoundedCornerShape(22.dp)).background(Color(0xFF232A4A)) })
                     .padding(14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -770,8 +780,7 @@ private fun ControlsArt() {
 private fun Badge(icon: ImageVector, text: String) {
     Row(
         Modifier
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
+            .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.08f)) })
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -800,7 +809,7 @@ private fun ReadyArt() {
                     drawCircle(Palette.Sky.copy(alpha = (1f - ring) * 0.5f), radius = size.minDimension / 2 * (1f + ring * 0.6f), style = Stroke(2.dp.toPx()))
                 }
                 .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))),
+                .background(BrassBrush),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

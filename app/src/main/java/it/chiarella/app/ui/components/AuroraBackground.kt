@@ -1,15 +1,10 @@
 package it.chiarella.app.ui.components
 
-import it.chiarella.app.ui.motion.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import it.chiarella.app.ui.motion.animateFloat
-import it.chiarella.app.ui.motion.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
-import it.chiarella.app.ui.motion.rememberInfiniteTransition
-import it.chiarella.app.ui.motion.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,11 +13,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import it.chiarella.app.ui.motion.animateColorAsState
+import it.chiarella.app.ui.motion.animateFloat
+import it.chiarella.app.ui.motion.animateFloatAsState
+import it.chiarella.app.ui.motion.rememberInfiniteTransition
+import it.chiarella.app.ui.motion.tween
+import it.chiarella.app.ui.theme.Look
 import it.chiarella.app.ui.theme.Palette
+import it.chiarella.app.ui.theme.walnut
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+@Composable
+fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
+    if (Look.skeuo) SkeuoAuroraBackground(colors, playing, modifier) else ClassicAuroraBackground(colors, playing, modifier)
+}
 
 private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF5B2C83))
 
@@ -31,7 +37,7 @@ private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF
  * dei suoni attivi, più un cielo di stelle che brillano.
  */
 @Composable
-fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
+private fun ClassicAuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
     if (it.chiarella.app.ui.motion.Motion.reduced) {
         androidx.compose.foundation.layout.Box(modifier.then(Modifier.background(
             Brush.verticalGradient(listOf(Palette.Night, Color(0xFF0D1030), Palette.NightDeep)))))
@@ -100,3 +106,48 @@ private fun DrawScope.glow(color: Color, center: Offset, radius: Float, alpha: F
         radius = radius, center = center,
     )
 }
+
+// ------------------------------------------------------------------ stile skeuomorfico
+
+/**
+ * Sfondo "mobile in noce": legno lucidato con vignettatura, più tre aloni caldi
+ * come la luce di una lampada, che prendono il colore dei suoni attivi e
+ * respirano lentamente mentre la musica suona.
+ */
+@Composable
+private fun SkeuoAuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
+    if (it.chiarella.app.ui.motion.Motion.reduced) {
+        androidx.compose.foundation.layout.Box(modifier.walnut())
+        return
+    }
+    val palette = if (colors.isEmpty()) LampColors else List(3) { colors[it % colors.size] }
+    val c1 by animateColorAsState(palette[0], tween(1600), label = "a1")
+    val c2 by animateColorAsState(palette[1], tween(1800), label = "a2")
+    val c3 by animateColorAsState(palette[2], tween(2000), label = "a3")
+    val intensity by animateFloatAsState(if (playing) 1f else 0.5f, tween(1400), label = "intensity")
+
+    val transition = rememberInfiniteTransition(label = "aurora")
+    val t by transition.animateFloat(
+        initialValue = 0f, targetValue = (2 * PI).toFloat(),
+        animationSpec = infiniteRepeatable(tween(36_000, easing = LinearEasing)),
+        label = "t",
+    )
+    val breathe by transition.animateFloat(
+        initialValue = 0.85f, targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(tween(5_000), RepeatMode.Reverse),
+        label = "breathe",
+    )
+
+    Canvas(modifier.walnut()) {
+        val w = size.width
+        val h = size.height
+        val pulse = if (playing) breathe else 1f
+        glow(c1, Offset(w * (0.2f + 0.12f * cos(t)), h * (0.16f + 0.05f * sin(t * 2))), w * 0.8f * pulse, 0.20f * intensity)
+        glow(c2, Offset(w * (0.85f + 0.08f * sin(t + 1f)), h * (0.48f + 0.06f * cos(t))), w * 0.7f, 0.14f * intensity)
+        glow(c3, Offset(w * (0.35f + 0.15f * sin(t + 2.5f)), h * (0.9f + 0.04f * cos(t * 2))), w * 0.85f * pulse, 0.14f * intensity)
+        // Ombra in basso per dare profondità alla console del player.
+        drawRect(Brush.verticalGradient(0.65f to Color.Transparent, 1f to Palette.NightDeep.copy(alpha = 0.8f)))
+    }
+}
+
+private val LampColors = listOf(Color(0xFFFFB04A), Color(0xFFE0782E), Color(0xFFFFD58A))

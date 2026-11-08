@@ -1,5 +1,6 @@
 package it.chiarella.app.ui
 
+import it.chiarella.app.ui.theme.Look
 import android.graphics.Color
 import android.media.AudioManager
 import android.os.Bundle
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
         volumeControlStream = AudioManager.STREAM_MUSIC
         val app = application as ChiarellaApp
         Motion.reduced = app.store.preferences.value.reducedAnimations
+        Look.skeuo = app.store.preferences.value.skeuomorphism
 
         // Uscita dallo splash: l'icona si espande e svanisce.
         splash.setOnExitAnimationListener { provider ->
@@ -66,7 +68,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val preferences by app.store.preferences.collectAsStateWithLifecycle()
-            SideEffect { Motion.reduced = preferences.reducedAnimations }
+            // Letti qui (non dentro SideEffect) così un cambio nelle impostazioni ricompone e si applica subito.
+            val reduced = preferences.reducedAnimations
+            val skeuo = preferences.skeuomorphism
+            SideEffect {
+                Motion.reduced = reduced
+                Look.skeuo = skeuo
+            }
             ChiarellaTheme {
                 var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
                 // "Un momento per te" aperto dalla chat: alla chiusura si torna alla chat.

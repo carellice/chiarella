@@ -5,7 +5,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -74,7 +73,7 @@ fun BackupDialog(store: Store, mixer: Mixer, onDismiss: () -> Unit) {
 
     val data = pending
     if (data != null) {
-        AlertDialog(
+        LeatherAlertDialog(
             onDismissRequest = { if (!busy) pending = null }, containerColor = Palette.SurfaceHigh,
             title = { Text("Importare il backup?") },
             text = { Text("${data.presets.size} profili e ${data.passions.size} passioni, con volumi e preferenze.\n\nSostituirà tutti i dati presenti su questo dispositivo. La riproduzione e il timer verranno fermati.") },
@@ -98,7 +97,7 @@ fun BackupDialog(store: Store, mixer: Mixer, onDismiss: () -> Unit) {
             dismissButton = { TextButton(enabled = !busy, onClick = { pending = null }) { Text("Annulla") } },
         )
     } else {
-        AlertDialog(
+        LeatherAlertDialog(
             onDismissRequest = { if (!busy) onDismiss() }, containerColor = Palette.SurfaceHigh,
             title = { Text("Backup e ripristino") },
             text = {

@@ -1,5 +1,13 @@
 package it.chiarella.app.ui.components
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.recessed
 import androidx.compose.animation.AnimatedContent
 import it.chiarella.app.ui.motion.animateFloatAsState
 import it.chiarella.app.ui.motion.spring
@@ -27,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
@@ -76,11 +83,9 @@ fun TimerSheet(
     onDismiss: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    ModalBottomSheet(
+    LeatherSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Palette.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.25f)) },
     ) {
         Column(
             Modifier
@@ -150,7 +155,12 @@ private fun ActiveTimer(state: Mixer.State, onExtend: (Int) -> Unit, onCancel: (
                     val stroke = 10.dp.toPx()
                     val inset = stroke / 2
                     val arcSize = Size(size.width - stroke, size.height - stroke)
-                    drawArc(Color.White.copy(alpha = 0.07f), 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
+                    if (Look.skeuo) {
+                        drawArc(Color(0xFF0A0705), 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(stroke + 4.dp.toPx()))
+                        drawArc(Color(0x22FFE6C0), 20f, 140f, false, Offset(inset, inset + 2.dp.toPx()), arcSize, style = Stroke(1.dp.toPx()))
+                    } else {
+                        drawArc(Color.White.copy(alpha = 0.07f), 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
+                    }
                     drawArc(
                         Brush.sweepGradient(listOf(c1, c2, c1)), -90f, 360f * progress, false,
                         Offset(inset, inset), arcSize, style = Stroke(stroke, cap = StrokeCap.Round),
@@ -161,8 +171,8 @@ private fun ActiveTimer(state: Mixer.State, onExtend: (Int) -> Unit, onCancel: (
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     formatCountdown(remaining),
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light, fontSize = 42.sp),
-                    color = Palette.Text,
+                    style = if (Look.skeuo) MaterialTheme.typography.displaySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontWeight = FontWeight.Light, fontSize = 40.sp, shadow = Shadow(Color(0xCCFF9A1F), Offset.Zero, 18f)) else MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light, fontSize = 42.sp),
+                    color = if (Look.skeuo) Skeuo.Amber else Palette.Text,
                 )
                 Text(
                     "si spegne alle " + DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(state.timerEndsAt)),
@@ -186,8 +196,7 @@ private fun CustomTimer(initial: Int, onStart: (Int) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp), Color(0x88000000)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
             .padding(18.dp)
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
@@ -201,22 +210,33 @@ private fun CustomTimer(initial: Int, onStart: (Int) -> Unit) {
                 Text(formatMinutes(it), style = MaterialTheme.typography.titleLarge, color = Palette.Text)
             }
         }
-        Slider(
-            value = minutes,
-            onValueChange = {
-                if (it.roundToInt() != minutes.roundToInt()) haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-                minutes = it
-            },
-            valueRange = 5f..240f,
-            steps = 46,
-            colors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Palette.Lavender,
-                inactiveTrackColor = Color.White.copy(alpha = 0.1f),
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent,
-            ),
-        )
+        if (Look.skeuo) {
+            // Stesso fader dei suoni: 5 min - 4 h a passi di 5 minuti.
+            VolumeSlider(
+                value = (minutes - 5f) / 235f,
+                onValueChange = { minutes = (((5f + it * 235f) / 5f).roundToInt() * 5).toFloat() },
+                primary = Palette.Lavender,
+                secondary = Palette.Sky,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+            )
+        } else {
+            Slider(
+                value = minutes,
+                onValueChange = {
+                    if (it.roundToInt() != minutes.roundToInt()) haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                    minutes = it
+                },
+                valueRange = 5f..240f,
+                steps = 46,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Palette.Lavender,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.1f),
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                ),
+            )
+        }
         Spacer(Modifier.height(6.dp))
         GradientButton("Avvia timer", Modifier.fillMaxWidth()) { onStart(minutes.roundToInt()) }
     }
@@ -227,9 +247,7 @@ private fun TimerChip(label: String, modifier: Modifier = Modifier, danger: Bool
     Box(
         modifier
             .height(52.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f))
-            .border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp))
+            .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = false).then(if (danger) Modifier.background(Color(0x33FF6B81)) else Modifier) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f)).border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp)) })
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -243,12 +261,12 @@ fun GradientButton(label: String, modifier: Modifier = Modifier, enabled: Boolea
     Box(
         modifier
             .height(54.dp)
-            .clip(CircleShape)
-            .background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha))))
+            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) })
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.4f + 0.6f * alpha))
+        if (Look.skeuo) Text(label, style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color(0x99FFF6D8), Offset(0f, 1.5f), 0f)), color = Skeuo.Ink)
+        else Text(label, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.4f + 0.6f * alpha))
     }
 }
 
@@ -262,11 +280,9 @@ fun SavePresetSheet(
 ) {
     var name by remember { mutableStateOf(suggestedName) }
     val sounds = state.active.mapNotNull { Sounds[it] }
-    ModalBottomSheet(
+    LeatherSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Palette.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.25f)) },
     ) {
         Column(
             Modifier
@@ -289,6 +305,8 @@ fun SavePresetSheet(
                 singleLine = true,
                 shape = RoundedCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = if (Look.skeuo) Color(0x80000000) else Color.Transparent,
+            unfocusedContainerColor = if (Look.skeuo) Color(0x66000000) else Color.Transparent,
                     focusedBorderColor = Palette.Lavender,
                     unfocusedBorderColor = Palette.GlassBorder,
                     focusedLabelColor = Palette.Lavender,
@@ -308,8 +326,7 @@ fun SavePresetSheet(
                         Modifier
                             .weight(1f)
                             .height(8.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.08f))
+                            .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.08f)) })
                             .drawBehind {
                                 drawRoundRect(
                                     Brush.horizontalGradient(listOf(s.primary, s.secondary)),
@@ -348,11 +365,9 @@ fun MasterVolumeSheet(
     val sounds = state.active.mapNotNull { Sounds[it] }
     val c1 = sounds.firstOrNull()?.primary ?: Palette.Lavender
     val c2 = sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
-    ModalBottomSheet(
+    LeatherSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Palette.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.25f)) },
     ) {
         Column(
             Modifier
@@ -390,16 +405,14 @@ fun MasterVolumeSheet(
                         Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg))
-                            .border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp))
+                            .look(skeuo = { this.keyCap(RoundedCornerShape(12.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) })
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
                                 onChange(level)
                             },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("${(level * 100).roundToInt()}%", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+                        Text("${(level * 100).roundToInt()}%", style = MaterialTheme.typography.titleSmall, color = if (selected && Look.skeuo) Skeuo.Ink else Palette.Text)
                     }
                 }
             }
@@ -418,8 +431,7 @@ fun MasterVolumeSheet(
                             Modifier
                                 .weight(1f)
                                 .height(8.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.08f))
+                                .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.08f)) })
                                 .drawBehind {
                                     // In trasparenza il volume del suono, pieno quello che si sente davvero.
                                     drawRoundRect(

@@ -1,5 +1,11 @@
 package it.chiarella.app.ui.components
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.metalCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.recessed
 import androidx.compose.animation.AnimatedVisibility
 import it.chiarella.app.ui.motion.animateFloatAsState
 import it.chiarella.app.ui.motion.spring
@@ -123,20 +129,24 @@ private fun PresetCard(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        colors.first().copy(alpha = 0.38f + 0.22f * glow),
-                        (colors.getOrNull(1) ?: colors.first()).copy(alpha = 0.14f + 0.16f * glow),
-                    )
-                )
-            )
-            .background(Palette.Glass)
-            .border(
-                width = (1f + glow).dp,
-                color = Color.White.copy(alpha = 0.12f + 0.6f * glow),
-                shape = shape,
+            .look(
+                skeuo = {
+                    leather(shape, elevation = (6f + 6f * glow).dp, tint = colors.first().copy(alpha = 0.16f + 0.18f * glow))
+                        .border((1f + glow).dp, Brush.verticalGradient(listOf(Skeuo.BrassLight.copy(alpha = 0.25f + 0.65f * glow), Skeuo.BrassDark.copy(alpha = 0.2f + 0.6f * glow))), shape)
+                },
+                classic = {
+                    clip(shape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    colors.first().copy(alpha = 0.38f + 0.22f * glow),
+                                    (colors.getOrNull(1) ?: colors.first()).copy(alpha = 0.14f + 0.16f * glow),
+                                )
+                            )
+                        )
+                        .background(Palette.Glass)
+                        .border(width = (1f + glow).dp, color = Color.White.copy(alpha = 0.12f + 0.6f * glow), shape = shape)
+                },
             )
             .combinedClickable(
                 interactionSource = interaction,
@@ -157,7 +167,7 @@ private fun PresetCard(
                 IconStack(sounds, size = 28.dp, max = 3)
                 Spacer(Modifier.weight(1f))
                 AnimatedVisibility(selected, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-                    Equalizer(playing, Color.White, Modifier.size(width = 16.dp, height = 14.dp))
+                    Equalizer(playing, if (Look.skeuo) Skeuo.Amber else Color.White, Modifier.size(width = 16.dp, height = 14.dp))
                 }
             }
             Spacer(Modifier.weight(1f))
@@ -200,8 +210,7 @@ private fun NewPresetCard(onClick: () -> Unit) {
             Box(
                 Modifier
                     .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.1f)),
+                    .look(skeuo = { this.metalCap() }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.1f)) }),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null, tint = Palette.Text)
@@ -221,8 +230,7 @@ private fun EmptyPresetsHint(modifier: Modifier = Modifier) {
             .padding(vertical = 6.dp)
             .width(236.dp)
             .height(112.dp)
-            .clip(shape)
-            .background(Palette.Glass)
+            .look(skeuo = { this.recessed(shape, Color(0x66000000)) }, classic = { this.clip(shape).background(Palette.Glass) })
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
     ) {

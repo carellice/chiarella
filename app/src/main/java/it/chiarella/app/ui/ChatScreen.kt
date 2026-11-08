@@ -1,5 +1,20 @@
 package it.chiarella.app.ui
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.draw.drawBehind
+import it.chiarella.app.ui.theme.metalCap
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.glassGlare
+import it.chiarella.app.ui.theme.brassPlate
+import it.chiarella.app.ui.theme.glossyCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.recessed
+import it.chiarella.app.ui.theme.BrassBrush
+import it.chiarella.app.ui.components.LeatherAlertDialog
+import it.chiarella.app.ui.components.LeatherSheet
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -75,7 +90,6 @@ import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -158,7 +172,8 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
     }
 
     val aura = when (mode) {
-        ChatMode.BREATHE -> listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6))
+        ChatMode.BREATHE -> if (Look.skeuo) listOf(Color(0xFFFFB648), Color(0xFFE5794F), Color(0xFF6FB3A0))
+            else listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6))
         else -> mix.active.mapNotNull { Sounds[it]?.primary }.ifEmpty { listOf(Palette.Lavender, Color(0xFFEC4899), Palette.Sky) }
     }
 
@@ -264,7 +279,7 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
     }
 
     if (confirmReset) {
-        AlertDialog(
+        LeatherAlertDialog(
             onDismissRequest = { confirmReset = false },
             containerColor = Palette.SurfaceHigh,
             title = { Text("Ricominciare da capo?") },
@@ -464,8 +479,7 @@ private fun Conversation(
                     .padding(bottom = 4.dp)
                     .size(52.dp)
                     .graphicsLayer { scaleX = pulse; scaleY = pulse }
-                    .clip(CircleShape)
-                    .background(bg)
+                    .look(skeuo = { this.then(if (mode == SendMode.MIC) Modifier.metalCap() else Modifier.glossyCap(bg)) }, classic = { this.clip(CircleShape).background(bg) })
                     .clickable {
                         when {
                             mode == SendMode.STOP -> onStop()
@@ -523,8 +537,7 @@ private fun RecordingBar(recorder: VoiceRecorder, onCancel: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(Palette.Surface.copy(alpha = 0.85f))
+            .look(skeuo = { this.leather(RoundedCornerShape(28.dp), elevation = 8.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(28.dp)).background(Palette.Surface.copy(alpha = 0.85f)) })
             .border(1.dp, Palette.Lavender.copy(alpha = 0.4f + 0.4f * level), RoundedCornerShape(28.dp))
             .padding(start = 6.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -554,7 +567,7 @@ private fun RecordingBar(recorder: VoiceRecorder, onCancel: () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Canvas(Modifier.weight(1f).height(32.dp)) {
             val gap = size.width / (BARS * 2f)
-            val brush = Brush.verticalGradient(listOf(Palette.Sky, Palette.Lavender))
+            val brush = BrassBrush
             history.forEachIndexed { i, v ->
                 val h = (size.height * (0.12f + 0.88f * v)).coerceAtMost(size.height)
                 drawRoundRect(
@@ -626,8 +639,7 @@ private fun Intro(compact: Boolean, onStarter: (String) -> Unit) {
                         style = MaterialTheme.typography.labelLarge,
                         color = Palette.Text,
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.07f))
+                            .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.07f)) })
                             .border(1.dp, Palette.GlassBorder, CircleShape)
                             .clickable { onStarter(s) }
                             .padding(horizontal = 14.dp, vertical = 10.dp),
@@ -679,19 +691,18 @@ private fun UserBubble(text: String, voice: Boolean) {
         Column(
             Modifier
                 .padding(start = 48.dp)
-                .clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp))
-                .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.9f), Palette.Sky.copy(alpha = 0.75f))))
+                .look(skeuo = { this.brassPlate(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp), elevation = 4.dp).drawBehind { glassGlare(0.35f) } }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp)).background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.9f), Palette.Sky.copy(alpha = 0.75f)))) })
                 .padding(horizontal = 16.dp, vertical = 11.dp),
         ) {
             if (voice) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Mic, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Mic, null, tint = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Vocale", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f))
+                    Text("Vocale", style = MaterialTheme.typography.labelMedium.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.8f))
                 }
                 Spacer(Modifier.height(2.dp))
             }
-            Text(text, style = MaterialTheme.typography.bodyLarge, color = Color.White)
+            Text(text, style = MaterialTheme.typography.bodyLarge.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink else Color.White)
         }
     }
 }
@@ -715,9 +726,7 @@ private fun AssistantBubble(message: ChatMessage, showActions: Boolean, mix: Mix
             style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
             color = Palette.Text,
             modifier = Modifier
-                .clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
-                .background(Palette.Surface.copy(alpha = 0.78f))
-                .border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
+                .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)) })
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
         val actions = message.actions
@@ -751,12 +760,17 @@ private fun ActionChip(action: ChatAction, mix: Mixer.State, onAction: (ChatActi
     val shape = RoundedCornerShape(18.dp)
     Row(
         Modifier
-            .clip(shape)
-            .background(
-                if (done) Brush.linearGradient(listOf(Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.06f)))
-                else Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.22f)))
+            .look(
+                skeuo = { if (done) recessed(shape, Color(0x66000000)) else keyCap(shape, brass = true) },
+                classic = {
+                    clip(shape)
+                        .background(
+                            if (done) Brush.linearGradient(listOf(Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.06f)))
+                            else Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.22f)))
+                        )
+                        .border(1.dp, if (done) Palette.GlassBorder else Palette.Lavender.copy(alpha = 0.6f), shape)
+                },
             )
-            .border(1.dp, if (done) Palette.GlassBorder else Palette.Lavender.copy(alpha = 0.6f), shape)
             .clickable(enabled = !done) {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 onAction(action)
@@ -770,7 +784,7 @@ private fun ActionChip(action: ChatAction, mix: Mixer.State, onAction: (ChatActi
             ChatAction.Moment -> ActionIcon(Icons.Rounded.SelfImprovement)
         }
         Spacer(Modifier.width(8.dp))
-        Text(label, style = MaterialTheme.typography.labelLarge, color = if (done) Palette.TextMuted else Palette.Text)
+        Text(label, style = MaterialTheme.typography.labelLarge.copy(shadow = if (done) MaterialTheme.typography.labelLarge.shadow else null), color = if (done) Palette.TextMuted else if (Look.skeuo) Skeuo.Ink else Palette.Text)
     }
 }
 
@@ -779,8 +793,7 @@ private fun ActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Box(
         Modifier
             .size(26.dp)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))),
+            .look(skeuo = { this.glossyCap(Color(0xFF7A4A1E), elevation = 2.dp) }, classic = { this.clip(CircleShape).background(BrassBrush) }),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, null, tint = Color.White, modifier = Modifier.size(15.dp))
@@ -793,8 +806,7 @@ private fun EventNote(text: String) {
         Row(
             Modifier
                 .widthIn(max = 320.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .look(skeuo = { this.recessed(RoundedCornerShape(16.dp)) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.05f)) })
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -811,8 +823,7 @@ private fun TypingBubble(modifier: Modifier = Modifier) {
     val t by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1100)), label = "typingT")
     Row(
         modifier
-            .clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
-            .background(Palette.Surface.copy(alpha = 0.78f))
+            .look(skeuo = { this.leather(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp), elevation = 5.dp, stitch = false) }, classic = { this.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)).background(Palette.Surface.copy(alpha = 0.78f)) })
             .border(1.dp, Palette.GlassBorder, RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp))
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -906,8 +917,7 @@ private fun AiSetup(ai: AiChat, onSaved: () -> Unit, onCancel: (() -> Unit)?) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .look(skeuo = { this.recessed(RoundedCornerShape(24.dp)) }, classic = { this.clip(RoundedCornerShape(24.dp)).background(Color.White.copy(alpha = 0.05f)) })
                 .border(1.dp, Palette.GlassBorder, RoundedCornerShape(24.dp))
                 .padding(18.dp)
         ) {
@@ -978,14 +988,12 @@ private fun AiSetup(ai: AiChat, onSaved: () -> Unit, onCancel: (() -> Unit)?) {
                 Column(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f))
-                        .border(1.dp, border, RoundedCornerShape(18.dp))
+                        .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f)).border(1.dp, border, RoundedCornerShape(18.dp)) })
                         .clickable { model = m.id }
                         .padding(12.dp)
                 ) {
-                    Text(m.label, style = MaterialTheme.typography.titleSmall, color = Palette.Text)
-                    Text(m.hint, style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted)
+                    Text(m.label, style = MaterialTheme.typography.titleSmall.copy(shadow = if (selected) null else MaterialTheme.typography.titleSmall.shadow), color = if (selected && Look.skeuo) Skeuo.Ink else Palette.Text)
+                    Text(m.hint, style = MaterialTheme.typography.bodySmall.copy(shadow = if (selected) null else MaterialTheme.typography.bodySmall.shadow), color = if (selected && Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Palette.TextMuted)
                 }
             }
         }
@@ -1065,13 +1073,18 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(Color(0xFFEC4899).copy(alpha = 0.22f * glow), Palette.Lavender.copy(alpha = 0.18f * glow), Color.White.copy(alpha = 0.04f))
-                )
+            .look(
+                skeuo = { leather(shape, elevation = 8.dp, tint = Color(0xFFEC4899).copy(alpha = 0.08f * glow)) },
+                classic = {
+                    clip(shape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Color(0xFFEC4899).copy(alpha = 0.22f * glow), Palette.Lavender.copy(alpha = 0.18f * glow), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                        .border(1.dp, Palette.GlassBorder, shape)
+                },
             )
-            .border(1.dp, Palette.GlassBorder, shape)
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1080,8 +1093,7 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Color(0xFFEC4899), Palette.Lavender))),
+                .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFFEC4899), Palette.Lavender))) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.EditNote, null, tint = Color.White, modifier = Modifier.size(26.dp))

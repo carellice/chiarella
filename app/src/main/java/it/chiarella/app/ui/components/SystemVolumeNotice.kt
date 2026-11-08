@@ -1,5 +1,14 @@
 package it.chiarella.app.ui.components
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.metalCap
+import it.chiarella.app.ui.theme.leather
+import androidx.compose.ui.graphics.Color
+import it.chiarella.app.ui.theme.recessed
+import it.chiarella.app.ui.theme.BrassBrush
 import android.media.AudioManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,15 +77,26 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
     val shape = RoundedCornerShape(28.dp)
     Dialog(onDismissRequest = { notice = null }) {
         Column(
-            Modifier.fillMaxWidth().clip(shape)
-                .background(Brush.verticalGradient(listOf(Palette.SurfaceHigh, Palette.Surface)))
-                .border(1.dp, Palette.GlassBorder, shape).padding(24.dp),
+            Modifier.fillMaxWidth()
+                .look(
+                    skeuo = { leather(shape, elevation = 24.dp) },
+                    classic = {
+                        clip(shape).background(Brush.verticalGradient(listOf(Palette.SurfaceHigh, Palette.Surface)))
+                            .border(1.dp, Palette.GlassBorder, shape)
+                    },
+                )
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                Modifier.size(64.dp).clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.25f))))
-                    .border(1.dp, Palette.GlassBorder, CircleShape),
+                Modifier.size(64.dp).look(
+                    skeuo = { metalCap() },
+                    classic = {
+                        clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = 0.35f), Palette.Sky.copy(alpha = 0.25f))))
+                            .border(1.dp, Palette.GlassBorder, CircleShape)
+                    },
+                ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(if (volume.muted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeDown,
@@ -86,9 +106,9 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
             Text("Volume del dispositivo", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
             Spacer(Modifier.height(18.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Palette.Glass)) {
+                Box(Modifier.weight(1f).height(8.dp).look(skeuo = { recessed(CircleShape, Color(0x66000000)) }, classic = { clip(CircleShape).background(Palette.Glass) })) {
                     Box(Modifier.fillMaxWidth(if (volume.muted) 0f else volume.percent / 100f).fillMaxHeight()
-                        .clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender, Palette.Sky))))
+                        .clip(CircleShape).background(BrassBrush))
                 }
                 Spacer(Modifier.width(12.dp))
                 Text(if (volume.muted) "Muto" else "${volume.percent}%", color = Palette.Text,
@@ -107,8 +127,8 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
             )
             Spacer(Modifier.height(22.dp))
             Box(
-                Modifier.fillMaxWidth().height(50.dp).clip(CircleShape)
-                    .background(Brush.horizontalGradient(listOf(Palette.Lavender, Palette.Sky)))
+                Modifier.fillMaxWidth().height(50.dp)
+                    .look(skeuo = { keyCap(RoundedCornerShape(14.dp), brass = true) }, classic = { clip(CircleShape).background(BrassBrush) })
                     .clickable {
                         if (canRaise) {
                             notice = check.raiseToMaximum()?.takeIf { it.needsIncrease }
@@ -117,8 +137,8 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(if (canRaise) "Porta al 100%" else "Ho capito", color = Palette.NightDeep,
-                    style = MaterialTheme.typography.labelLarge)
+                Text(if (canRaise) "Porta al 100%" else "Ho capito", color = if (Look.skeuo) Skeuo.Ink else Palette.NightDeep,
+                    style = if (Look.skeuo) MaterialTheme.typography.titleMedium.copy(shadow = null) else MaterialTheme.typography.labelLarge)
             }
             Spacer(Modifier.height(6.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {

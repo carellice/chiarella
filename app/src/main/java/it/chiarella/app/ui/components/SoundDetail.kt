@@ -1,5 +1,13 @@
 package it.chiarella.app.ui.components
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.lcd
+import it.chiarella.app.ui.theme.Skeuo
+import it.chiarella.app.ui.theme.keyCap
+import it.chiarella.app.ui.theme.glossyCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.recessed
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import it.chiarella.app.ui.motion.animateColorAsState
@@ -137,9 +145,7 @@ fun SoundDetailDialog(
                         rotationX = (1f - progress) * 12f
                         cameraDistance = 16 * density
                     }
-                    .clip(shape)
-                    .background(Palette.Surface)
-                    .border(1.dp, Brush.verticalGradient(listOf(sound.secondary.copy(alpha = 0.6f), Palette.GlassBorder)), shape)
+                    .look(skeuo = { this.leather(shape, elevation = 24.dp) }, classic = { this.clip(shape).background(Palette.Surface).border(1.dp, Brush.verticalGradient(listOf(sound.secondary.copy(alpha = 0.6f), Palette.GlassBorder)), shape) })
                     // I tocchi dentro la finestra non devono chiuderla.
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}
                     .verticalScroll(rememberScrollState()),
@@ -242,8 +248,7 @@ private fun DetailHeader(sound: Sound, active: Boolean, playing: Boolean, volume
                         )
                     }
                 }
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(sound.primary, sound.secondary))),
+                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(sound.icon, null, tint = Color.White, modifier = Modifier.size(46.dp))
@@ -281,14 +286,12 @@ private fun StatePill(sound: Sound, active: Boolean, live: Boolean, modifier: Mo
     val on by animateFloatAsState(if (active) 1f else 0f, tween(400), label = "statePill")
     Row(
         modifier
-            .clip(CircleShape)
-            .background(lerp(Color.Black.copy(alpha = 0.18f), sound.primary.copy(alpha = 0.6f), on))
-            .border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.85f), on), CircleShape)
+            .look(skeuo = { this.lcd(CircleShape) }, classic = { this.clip(CircleShape).background(lerp(Color.Black.copy(alpha = 0.18f), sound.primary.copy(alpha = 0.6f), on)).border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.85f), on), CircleShape) })
             .padding(horizontal = 12.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (active) {
-            Equalizer(live, Color.White, Modifier.size(width = 14.dp, height = 11.dp))
+            Equalizer(live, if (Look.skeuo) Skeuo.Amber else Color.White, Modifier.size(width = 14.dp, height = 11.dp))
             Spacer(Modifier.width(8.dp))
         }
         AnimatedContent(
@@ -300,7 +303,7 @@ private fun StatePill(sound: Sound, active: Boolean, live: Boolean, modifier: Mo
             transitionSpec = { (fadeIn(tween(220)) + slideInVertically { it }) togetherWith (fadeOut(tween(150)) + slideOutVertically { -it }) },
             label = "stateText",
         ) { text ->
-            Text(text, style = MaterialTheme.typography.labelMedium, color = lerp(Palette.TextMuted, Color.White, on))
+            Text(text, style = MaterialTheme.typography.labelMedium, color = lerp(Palette.TextMuted, if (Look.skeuo) Skeuo.Amber else Color.White, on))
         }
     }
 }
@@ -311,8 +314,7 @@ private fun VolumeBox(sound: Sound, active: Boolean, volume: Float, onVolumeChan
     Column(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .look(skeuo = { this.recessed(RoundedCornerShape(20.dp)) }, classic = { this.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(alpha = 0.05f)) })
             .border(1.dp, Palette.GlassBorder, RoundedCornerShape(20.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
@@ -362,8 +364,7 @@ private fun PairChip(sound: Sound, active: Boolean, modifier: Modifier = Modifie
         Box(
             Modifier
                 .size(36.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(sound.primary, sound.secondary))),
+                .look(skeuo = { this.glossyCap(sound.primary) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(sound.primary, sound.secondary))) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(sound.icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -381,13 +382,18 @@ private fun ToggleButton(sound: Sound, active: Boolean, modifier: Modifier = Mod
         modifier
             .fillMaxWidth()
             .height(54.dp)
-            .clip(CircleShape)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(lerp(sound.primary, Color.White.copy(alpha = 0.08f), on), lerp(sound.secondary, Color.White.copy(alpha = 0.08f), on))
-                )
+            .look(
+                skeuo = { keyCap(RoundedCornerShape(16.dp), brass = !active) },
+                classic = {
+                    clip(CircleShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(lerp(sound.primary, Color.White.copy(alpha = 0.08f), on), lerp(sound.secondary, Color.White.copy(alpha = 0.08f), on))
+                            )
+                        )
+                        .border(1.dp, Palette.GlassBorder.copy(alpha = on), CircleShape)
+                },
             )
-            .border(1.dp, Palette.GlassBorder.copy(alpha = on), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -396,7 +402,7 @@ private fun ToggleButton(sound: Sound, active: Boolean, modifier: Modifier = Mod
             transitionSpec = { (fadeIn(tween(200)) + slideInVertically { it }) togetherWith (fadeOut(tween(150)) + slideOutVertically { -it }) },
             label = "toggleLabel",
         ) { isOn ->
-            Text(if (isOn) "Spegni ${sound.name.lowercase()}" else "Accendi ${sound.name.lowercase()}", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(if (isOn) "Spegni ${sound.name.lowercase()}" else "Accendi ${sound.name.lowercase()}", style = MaterialTheme.typography.titleMedium, color = when { !Look.skeuo -> Color.White; isOn -> Palette.Text; else -> Skeuo.Ink })
         }
     }
 }

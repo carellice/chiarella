@@ -1,5 +1,10 @@
 package it.chiarella.app.ui.components
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import androidx.compose.material3.ModalBottomSheet
+import it.chiarella.app.ui.theme.recessed
+import it.chiarella.app.ui.theme.BrassBrush
 import androidx.compose.animation.AnimatedContent
 import it.chiarella.app.ui.motion.animateFloatAsState
 import it.chiarella.app.ui.motion.tween
@@ -34,7 +39,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -80,7 +84,7 @@ fun UpdateBanner(state: UpdateState, onOpen: () -> Unit, onDismiss: () -> Unit, 
             Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))),
+                .background(BrassBrush),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.SystemUpdate, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -107,11 +111,9 @@ fun UpdateBanner(state: UpdateState, onOpen: () -> Unit, onDismiss: () -> Unit, 
 @Composable
 fun UpdateSheet(updater: Updater, state: UpdateState, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    ModalBottomSheet(
+    LeatherSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Palette.Surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.25f)) },
     ) {
         Column(
             Modifier
@@ -200,8 +202,7 @@ private fun ReleaseDetails(release: Release, actions: @Composable () -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .heightIn(max = 260.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .look(skeuo = { this.recessed(RoundedCornerShape(18.dp)) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.05f)) })
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -230,11 +231,10 @@ private fun DownloadBar(progress: Float) {
             Modifier
                 .fillMaxWidth()
                 .height(12.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.08f))
+                .look(skeuo = { this.recessed(CircleShape) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.08f)) })
                 .drawBehind {
                     drawRoundRect(
-                        Brush.horizontalGradient(listOf(Palette.Lavender, Palette.Sky)),
+                        BrassBrush,
                         size = Size(size.width * shown, size.height),
                         cornerRadius = CornerRadius(size.height / 2),
                     )

@@ -1,5 +1,13 @@
 package it.chiarella.app.ui
 
+import it.chiarella.app.ui.theme.look
+import it.chiarella.app.ui.theme.Look
+import androidx.compose.material3.AlertDialog
+import it.chiarella.app.ui.theme.glossyCap
+import it.chiarella.app.ui.theme.leather
+import it.chiarella.app.ui.theme.BrassBrush
+import it.chiarella.app.ui.components.LeatherAlertDialog
+import it.chiarella.app.ui.components.LeatherSheet
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -58,7 +66,6 @@ import it.chiarella.app.ui.components.PreferencesDialog
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.SaveAlt
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -313,7 +320,7 @@ fun HomeScreen(
     }
 
     toDelete?.let { preset ->
-        AlertDialog(
+        LeatherAlertDialog(
             onDismissRequest = { toDelete = null },
             containerColor = Palette.SurfaceHigh,
             title = { Text("Eliminare \"${preset.name}\"?") },
@@ -442,13 +449,18 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         modifier
             .padding(top = 6.dp)
             .fillMaxWidth()
-            .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(Palette.Lavender.copy(alpha = 0.30f * glow), Palette.Sky.copy(alpha = 0.16f * glow), Color.White.copy(alpha = 0.04f))
-                )
+            .look(
+                skeuo = { leather(shape, elevation = 8.dp, tint = Palette.Lavender.copy(alpha = 0.10f * glow)) },
+                classic = {
+                    clip(shape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Palette.Lavender.copy(alpha = 0.30f * glow), Palette.Sky.copy(alpha = 0.16f * glow), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                        .border(1.dp, Palette.GlassBorder, shape)
+                },
             )
-            .border(1.dp, Palette.GlassBorder, shape)
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -457,8 +469,7 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))),
+                .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.SelfImprovement, null, tint = Color.White, modifier = Modifier.size(26.dp))
