@@ -1,7 +1,7 @@
 package it.chiarella.app.data
 
 /** Stile grafico dell'interfaccia. */
-enum class UiStyle { CLASSIC, SKEUO, METRO }
+enum class UiStyle { CLASSIC, SKEUO, METRO, NOTHING }
 
 data class AppPreferences(
     val showVolumeNotice: Boolean = true,

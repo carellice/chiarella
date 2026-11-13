@@ -2,6 +2,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.nothingSurface
 import it.chiarella.app.ui.theme.glossyCap
 import it.chiarella.app.ui.theme.leather
 import it.chiarella.app.ui.theme.Skeuo
@@ -373,12 +374,12 @@ private fun CategoryChip(category: PassionCategory, selected: Boolean, onClick: 
     Row(
         Modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .look(skeuo = { this.keyCap(CircleShape, brass = selected, elevation = 3.dp) }, classic = { this.clip(CircleShape).background(bg).border(1.dp, border, CircleShape) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) })
+            .look(skeuo = { this.keyCap(CircleShape, brass = selected, elevation = 3.dp) }, classic = { this.clip(CircleShape).background(bg).border(1.dp, border, CircleShape) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) }, nothing = { if (selected) this.nothingSurface(CircleShape).border(1.dp, Color.White, CircleShape) else this.nothingSurface(CircleShape) })
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(category.icon, null, tint = if (selected) (if (Look.skeuo) Skeuo.Ink else Color.White) else category.secondary, modifier = Modifier.size(18.dp))
+        Icon(category.icon, null, tint = if (selected) (if (Look.skeuo) Skeuo.Ink else Color.White) else if (Look.nothing) Palette.TextMuted else category.secondary, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(category.label, style = MaterialTheme.typography.labelLarge.copy(shadow = if (selected) null else MaterialTheme.typography.labelLarge.shadow), color = if (selected && Look.skeuo) Skeuo.Ink else Palette.Text)
     }
@@ -550,7 +551,7 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
                     Modifier
                         .height(8.dp)
                         .width(8.dp + 18.dp * done)
-                        .look(skeuo = { this.recessed(CircleShape).background(Skeuo.Amber.copy(alpha = 0.9f * done)) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.18f + 0.6f * done)) }, metro = { this.background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.18f), Palette.Lavender, done)) })
+                        .look(skeuo = { this.recessed(CircleShape).background(Skeuo.Amber.copy(alpha = 0.9f * done)) }, classic = { this.clip(CircleShape).background(Color.White.copy(alpha = 0.18f + 0.6f * done)) }, metro = { this.background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.18f), Palette.Lavender, done)) }, nothing = { this.background(androidx.compose.ui.graphics.lerp(Color(0xFF333333), Color.White, done)) })
                 )
             }
         }
@@ -574,6 +575,7 @@ private fun BreathFlower(breath: Float, modifier: Modifier = Modifier) {
     when {
         Look.skeuo -> SkeuoBreathFlower(breath = breath, modifier = modifier)
         Look.metro -> MetroBreathTiles(breath = breath, modifier = modifier)
+        Look.nothing -> NothingBreathDots(breath = breath, modifier = modifier)
         else -> ClassicBreathFlower(breath = breath, modifier = modifier)
     }
 }
@@ -871,5 +873,38 @@ private fun MetroBreathTiles(breath: Float, modifier: Modifier = Modifier) {
             androidx.compose.ui.geometry.Size(frame * 2, frame * 2),
             style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f * density),
         )
+    }
+}
+
+/**
+ * Nothing: griglia di punti dentro un cerchio. Col respiro si accendono i punti
+ * dal centro verso il bordo; un anello sottile segna il pieno, nessun accento rosso per non disturbare il testo.
+ */
+@Composable
+private fun NothingBreathDots(breath: Float, modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val half = size.minDimension / 2
+        val step = half / 9f
+        val dot = step * 0.2f
+        val c = center
+        val lit = half * (0.18f + 0.82f * breath)
+        var y = -9
+        while (y <= 9) {
+            var x = -9
+            while (x <= 9) {
+                val p = androidx.compose.ui.geometry.Offset(c.x + x * step, c.y + y * step)
+                val d = (p - c).getDistance()
+                if (d <= half) {
+                    // Bordo morbido: i punti appena oltre la soglia sfumano invece di scattare.
+                    val a = ((lit - d) / step + 1f).coerceIn(0f, 1f)
+                    drawCircle(Color(0xFF333333), dot, p)
+                    // Tenui: sopra ci sono le istruzioni del respiro e devono restare leggibili.
+                    if (a > 0f) drawCircle(Color.White, dot * (1f + 0.35f * a), p, alpha = 0.32f * a)
+                }
+                x++
+            }
+            y++
+        }
+        drawCircle(Color(0xFF333333), half, c, style = androidx.compose.ui.graphics.drawscope.Stroke(1f * density))
     }
 }

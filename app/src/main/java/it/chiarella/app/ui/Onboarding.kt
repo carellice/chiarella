@@ -3,6 +3,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.nothingSurface
 import it.chiarella.app.ui.theme.lcd
 import it.chiarella.app.ui.theme.keyCap
 import it.chiarella.app.ui.theme.leather
@@ -710,7 +711,7 @@ private fun TimerArt() {
                     style = MaterialTheme.typography.labelLarge,
                     color = if (Look.skeuo) if (on) Skeuo.Ink else Palette.Text else if (on) Color.White else Palette.TextMuted,
                     modifier = Modifier
-                        .look(skeuo = { this.keyCap(RoundedCornerShape(10.dp), brass = on) }, classic = { this.clip(RoundedCornerShape(14.dp)).background(if (on) Palette.Lavender.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.07f)) }, metro = { this.background(if (on) Palette.Lavender else Palette.Glass) })
+                        .look(skeuo = { this.keyCap(RoundedCornerShape(10.dp), brass = on) }, classic = { this.clip(RoundedCornerShape(14.dp)).background(if (on) Palette.Lavender.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.07f)) }, metro = { this.background(if (on) Palette.Lavender else Palette.Glass) }, nothing = { this.nothingSurface(RoundedCornerShape(14.dp)).then(if (on) Modifier.border(1.dp, Color.White, RoundedCornerShape(14.dp)) else Modifier) })
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
@@ -813,7 +814,7 @@ private fun ReadyArt() {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                Icons.Rounded.NotificationsActive, null, tint = Color.White,
+                Icons.Rounded.NotificationsActive, null, tint = Palette.OnAccent,
                 modifier = Modifier
                     .size(38.dp)
                     .graphicsLayer { rotationZ = swing },

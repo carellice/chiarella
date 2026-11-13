@@ -89,7 +89,7 @@ fun UpdateBanner(state: UpdateState, onOpen: () -> Unit, onDismiss: () -> Unit, 
                 .then(if (Look.metro) Modifier.border(2.dp, Color.White, CircleShape) else Modifier.background(BrassBrush)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.SystemUpdate, null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.SystemUpdate, null, tint = Palette.OnAccent, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.Text)

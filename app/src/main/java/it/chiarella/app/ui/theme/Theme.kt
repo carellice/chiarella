@@ -22,36 +22,40 @@ object Look {
     var style by mutableStateOf(UiStyle.CLASSIC)
     val skeuo get() = style == UiStyle.SKEUO
     val metro get() = style == UiStyle.METRO
+    val nothing get() = style == UiStyle.NOTHING
 }
 
-private fun pick(classic: Long, skeuo: Long, metro: Long) = Color(
+private fun pick(classic: Long, skeuo: Long, metro: Long, nothing: Long) = Color(
     when (Look.style) {
         UiStyle.CLASSIC -> classic
         UiStyle.SKEUO -> skeuo
         UiStyle.METRO -> metro
+        UiStyle.NOTHING -> nothing
     }
 )
 
 /** I colori seguono lo stile attivo: leggerli in composizione o nel disegno aggiorna la UI al cambio. */
 object Palette {
-    val Night get() = pick(0xFF080B19, 0xFF1B110A, 0xFF000000)
-    val NightDeep get() = pick(0xFF05070F, 0xFF0E0805, 0xFF000000)
-    val Indigo get() = pick(0xFF141A3F, 0xFF2C1C11, 0xFF1F1F1F)
-    val Surface get() = pick(0xFF161B33, 0xFF2A1C13, 0xFF1F1F1F)
-    val SurfaceHigh get() = pick(0xFF1E2444, 0xFF3A2819, 0xFF1F1F1F)
-    val Glass get() = pick(0x14FFFFFF, 0x1AF6E3C0, 0xFF262626)
-    val GlassBorder get() = pick(0x1FFFFFFF, 0x4DD8B26A, 0xFFFFFFFF)
-    val Text get() = pick(0xFFEDF0FA, 0xFFF6EAD2, 0xFFFFFFFF)
-    val TextMuted get() = pick(0xFFA0A8C6, 0xFFCDB792, 0xFFA6A6A6)
-    val TextFaint get() = pick(0xFF6B7396, 0xFF8F7A5C, 0xFF737373)
-    val Lavender get() = pick(0xFF8B7CF6, 0xFFE0A24A, 0xFF1BA1E2)
-    val Sky get() = pick(0xFF5EC8F2, 0xFFF2D28C, 0xFF1BA1E2)
-    val Peach get() = pick(0xFFFFB38A, 0xFFF08A5D, 0xFF1BA1E2)
+    val Night get() = pick(0xFF080B19, 0xFF1B110A, 0xFF000000, 0xFF000000)
+    val NightDeep get() = pick(0xFF05070F, 0xFF0E0805, 0xFF000000, 0xFF000000)
+    val Indigo get() = pick(0xFF141A3F, 0xFF2C1C11, 0xFF1F1F1F, 0xFF111111)
+    val Surface get() = pick(0xFF161B33, 0xFF2A1C13, 0xFF1F1F1F, 0xFF111111)
+    val SurfaceHigh get() = pick(0xFF1E2444, 0xFF3A2819, 0xFF1F1F1F, 0xFF1A1A1A)
+    val Glass get() = pick(0x14FFFFFF, 0x1AF6E3C0, 0xFF262626, 0xFF111111)
+    val GlassBorder get() = pick(0x1FFFFFFF, 0x4DD8B26A, 0xFFFFFFFF, 0xFF333333)
+    val Text get() = pick(0xFFEDF0FA, 0xFFF6EAD2, 0xFFFFFFFF, 0xFFE8E8E8)
+    val TextMuted get() = pick(0xFFA0A8C6, 0xFFCDB792, 0xFFA6A6A6, 0xFF999999)
+    val TextFaint get() = pick(0xFF6B7396, 0xFF8F7A5C, 0xFF737373, 0xFF666666)
+    val Lavender get() = pick(0xFF8B7CF6, 0xFFE0A24A, 0xFF1BA1E2, 0xFFFFFFFF)
+    val Sky get() = pick(0xFF5EC8F2, 0xFFF2D28C, 0xFF1BA1E2, 0xFFFFFFFF)
+    val Peach get() = pick(0xFFFFB38A, 0xFFF08A5D, 0xFF1BA1E2, 0xFFD71921)
+    /** Testo e icone sopra l'accento (Lavender): bianco, ma nero sul bianco di Nothing. */
+    val OnAccent get() = pick(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000)
 }
 
 private fun scheme(): ColorScheme = darkColorScheme(
     primary = Palette.Lavender,
-    onPrimary = if (Look.skeuo) Color(0xFF2B1A0E) else Color.White,
+    onPrimary = if (Look.skeuo) Color(0xFF2B1A0E) else if (Look.nothing) Color.Black else Color.White,
     secondary = Palette.Sky,
     background = Palette.Night,
     onBackground = Palette.Text,
@@ -116,5 +120,5 @@ private val MetroType = Typography().run {
 
 @Composable
 fun ChiarellaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme(), typography = when (Look.style) { UiStyle.CLASSIC -> ClassicType; UiStyle.SKEUO -> SkeuoType; UiStyle.METRO -> MetroType }, content = content)
+    MaterialTheme(colorScheme = scheme(), typography = when (Look.style) { UiStyle.CLASSIC -> ClassicType; UiStyle.SKEUO -> SkeuoType; UiStyle.METRO -> MetroType; UiStyle.NOTHING -> NothingType }, content = content)
 }

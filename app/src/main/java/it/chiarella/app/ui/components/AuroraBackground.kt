@@ -21,6 +21,7 @@ import it.chiarella.app.ui.motion.tween
 import it.chiarella.app.ui.theme.Look
 import it.chiarella.app.ui.theme.Palette
 import it.chiarella.app.ui.theme.walnut
+import it.chiarella.app.ui.theme.dotGrid
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -30,6 +31,8 @@ fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier =
     when {
         Look.skeuo -> SkeuoAuroraBackground(colors, playing, modifier)
         // Metro: nero assoluto, come lo sfondo scuro di Windows Phone.
+        // Nothing: nero OLED con la griglia di punti appena percettibile.
+        Look.nothing -> androidx.compose.foundation.layout.Box(modifier.background(Color.Black).dotGrid(alpha = 0.35f))
         Look.metro -> androidx.compose.foundation.layout.Box(modifier.background(Color.Black))
         else -> ClassicAuroraBackground(colors, playing, modifier)
     }

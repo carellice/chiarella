@@ -2,6 +2,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.Look
 import it.chiarella.app.ui.theme.Metro
+import it.chiarella.app.ui.theme.Nothing
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -90,7 +91,10 @@ class MainActivity : ComponentActivity() {
                 AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
-                        if (Look.metro) {
+                        if (Look.nothing) {
+                            // Nothing: solo dissolvenza, breve e sobria.
+                            fadeIn(tween(320, delayMillis = 120, easing = Nothing.Ease)) togetherWith fadeOut(tween(180, easing = Nothing.Ease))
+                        } else if (Look.metro) {
                             // La rotazione la fa il turnstile qui sotto: le dissolvenze seguono i suoi tempi.
                             fadeIn(tween(1, delayMillis = 230)) togetherWith fadeOut(tween(1, delayMillis = 220))
                         } else {

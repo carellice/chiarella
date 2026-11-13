@@ -86,7 +86,8 @@ fun PlayerBar(
     onVolume: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.metro) MetroPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
+    if (Look.nothing) NothingPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
+    else if (Look.metro) MetroPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
     else if (Look.skeuo) SkeuoPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier) else ClassicPlayerBar(state = state, presetName = presetName, onTogglePlay = onTogglePlay, onStop = onStop, onTimer = onTimer, onVolume = onVolume, modifier = modifier)
 }
 
@@ -99,7 +100,8 @@ fun RoundIconButton(
     tint: Color = Color.Unspecified,
 ) {
     // Senza colore esplicito ogni stile usa il suo: grigio-lavanda o avorio sul metallo.
-    if (Look.metro) MetroRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Palette.Text })
+    if (Look.nothing) NothingRoundIconButton(icon, description, size, onClick, tint.takeOrElse { it.chiarella.app.ui.theme.Nothing.TextPrimary })
+    else if (Look.metro) MetroRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Palette.Text })
     else if (Look.skeuo) SkeuoRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Color(0xFFEDE3D2) })
     else ClassicRoundIconButton(icon, description, size, onClick, tint.takeOrElse { Palette.TextMuted })
 }

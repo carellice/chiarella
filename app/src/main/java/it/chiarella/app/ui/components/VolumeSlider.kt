@@ -43,7 +43,8 @@ fun VolumeSlider(
     secondary: Color,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.metro) MetroVolumeSlider(value = value, onValueChange = onValueChange, modifier = modifier)
+    if (Look.nothing) NothingSegmentedSlider(value = value, onValueChange = onValueChange, modifier = modifier)
+    else if (Look.metro) MetroVolumeSlider(value = value, onValueChange = onValueChange, modifier = modifier)
     else if (Look.skeuo) SkeuoVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier) else ClassicVolumeSlider(value = value, onValueChange = onValueChange, primary = primary, secondary = secondary, modifier = modifier)
 }
 

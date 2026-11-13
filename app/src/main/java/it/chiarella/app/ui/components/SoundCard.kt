@@ -90,7 +90,8 @@ fun SoundCard(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (Look.metro) MetroSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
+    if (Look.nothing) NothingSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
+    else if (Look.metro) MetroSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
     else if (Look.skeuo) SkeuoSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier) else ClassicSoundCard(sound = sound, active = active, playing = playing, volume = volume, onToggle = onToggle, onVolumeChange = onVolumeChange, onDetails = onDetails, modifier = modifier)
 }
 

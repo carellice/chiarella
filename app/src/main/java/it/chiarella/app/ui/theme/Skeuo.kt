@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -324,7 +325,7 @@ private val Brass = Brush.verticalGradient(listOf(Skeuo.BrassLight, Skeuo.Brass,
 /** Ottone nello stile skeuomorfico, il gradiente lavanda-cielo in quello classico. */
 val BrassBrush: Brush get() = when {
     Look.skeuo -> Brass
-    Look.metro -> androidx.compose.ui.graphics.SolidColor(Palette.Lavender)
+    Look.metro || Look.nothing -> androidx.compose.ui.graphics.SolidColor(Palette.Lavender)
     else -> Brush.linearGradient(listOf(Palette.Lavender, Palette.Sky))
 }
 
@@ -333,17 +334,23 @@ fun Modifier.keyCap(shape: Shape, brass: Boolean, elevation: Dp = 5.dp): Modifie
     if (brass) brassPlate(shape, elevation)
     else brushedMetal(shape, dark = true, elevation = elevation)
 
-/** Ramo per stile: applica [skeuo], [metro] o [classic] secondo Look.style. */
+/** Ramo per stile: applica [skeuo], [metro], [nothing] o [classic] secondo Look.style. Senza [nothing], Nothing usa una superficie piatta. */
 inline fun Modifier.look(
     skeuo: Modifier.() -> Modifier,
     classic: Modifier.() -> Modifier,
     metro: Modifier.() -> Modifier,
+    nothing: Modifier.() -> Modifier = { nothingSurface() },
 ): Modifier = when {
     Look.skeuo -> skeuo()
     Look.metro -> metro()
+    Look.nothing -> nothing()
     else -> classic()
 }
 
-/** Come sopra, ma lo stile Metro riusa il ramo [classic]. */
+/** Superficie Nothing predefinita: #111 con bordo sottile, raggio 16. */
+fun Modifier.nothingSurface(shape: Shape = RoundedCornerShape(16.dp)): Modifier =
+    clip(shape).background(Nothing.Surface).border(1.dp, Nothing.Border, shape)
+
+/** Come sopra, ma gli stili Metro e Nothing riusano il ramo [classic]. */
 inline fun Modifier.look(skeuo: Modifier.() -> Modifier, classic: Modifier.() -> Modifier): Modifier =
-    look(skeuo, classic, classic)
+    look(skeuo, classic, classic, classic)

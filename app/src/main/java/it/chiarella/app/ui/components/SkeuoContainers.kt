@@ -3,6 +3,7 @@ package it.chiarella.app.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,22 @@ fun LeatherSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (Look.nothing) {
+        // Nothing: superficie piatta con bordo sottile e una linguetta di 2dp.
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = sheetState,
+            containerColor = Palette.Surface,
+            scrimColor = Color.Black.copy(alpha = 0.8f),
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            tonalElevation = 0.dp,
+            dragHandle = {
+                Box(Modifier.padding(top = 12.dp, bottom = 20.dp).width(36.dp).height(2.dp).background(Palette.GlassBorder))
+            },
+            content = content,
+        )
+        return
+    }
     if (Look.metro) {
         // Metro: pannello piatto a spigoli vivi, senza maniglia.
         ModalBottomSheet(
@@ -107,7 +124,7 @@ fun LeatherAlertDialog(
     text: (@Composable () -> Unit)? = null,
     containerColor: Color = Color.Unspecified,
 ) {
-    if (!Look.skeuo && !Look.metro) {
+    if (!Look.skeuo && !Look.metro && !Look.nothing) {
         AlertDialog(
             onDismissRequest = onDismissRequest, confirmButton = confirmButton, modifier = modifier,
             dismissButton = dismissButton, title = title, text = text,
@@ -119,7 +136,7 @@ fun LeatherAlertDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .then(if (Look.metro) Modifier.metroSwivel().background(Palette.SurfaceHigh) else Modifier.leather(RoundedCornerShape(26.dp), elevation = 24.dp))
+                .then(if (Look.nothing) Modifier.clip(RoundedCornerShape(16.dp)).background(Palette.Surface).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) else if (Look.metro) Modifier.metroSwivel().background(Palette.SurfaceHigh) else Modifier.leather(RoundedCornerShape(26.dp), elevation = 24.dp))
                 .padding(start = 26.dp, end = 18.dp, top = 26.dp, bottom = 14.dp)
         ) {
             CompositionLocalProvider(LocalContentColor provides Palette.Text) {

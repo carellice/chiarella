@@ -473,7 +473,7 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }),
+                .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }, nothing = { this.clip(CircleShape).border(1.dp, Palette.GlassBorder, CircleShape) }),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.SelfImprovement, null, tint = Color.White, modifier = Modifier.size(26.dp))

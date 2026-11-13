@@ -60,6 +60,7 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
                         Triple(UiStyle.CLASSIC, "Classico", "Cielo notturno, vetro e luci soffuse."),
                         Triple(UiStyle.SKEUO, "Skeuomorfico", "Legno, pelle cucita, ottone e metallo: un vecchio apparecchio hi-fi."),
                         Triple(UiStyle.METRO, "Metro", "Riquadri piatti a tinta unita su nero, come su Windows Phone."),
+                        Triple(UiStyle.NOTHING, "Nothing", "Nero OLED, punti, caratteri tecnici e una sola spia rossa."),
                     ).forEach { (style, label, hint) ->
                         Row(
                             Modifier.fillMaxWidth()

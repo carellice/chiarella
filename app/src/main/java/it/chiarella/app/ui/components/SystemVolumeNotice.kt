@@ -131,7 +131,7 @@ internal fun SystemVolumeNotice(enabled: Boolean, onDisable: () -> Unit) {
             Spacer(Modifier.height(22.dp))
             Box(
                 Modifier.fillMaxWidth().height(50.dp)
-                    .look(skeuo = { keyCap(RoundedCornerShape(14.dp), brass = true) }, classic = { clip(CircleShape).background(BrassBrush) }, metro = { background(Palette.Lavender) })
+                    .look(skeuo = { keyCap(RoundedCornerShape(14.dp), brass = true) }, classic = { clip(CircleShape).background(BrassBrush) }, metro = { background(Palette.Lavender) }, nothing = { clip(CircleShape).background(Palette.Lavender) })
                     .clickable {
                         if (canRaise) {
                             notice = check.raiseToMaximum()?.takeIf { it.needsIncrease }

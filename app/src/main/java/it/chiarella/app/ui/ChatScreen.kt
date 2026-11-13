@@ -2,6 +2,7 @@ package it.chiarella.app.ui
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.nothingSurface
 import it.chiarella.app.ui.theme.metroTilt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.draw.drawBehind
@@ -772,6 +773,7 @@ private fun ActionChip(action: ChatAction, mix: Mixer.State, onAction: (ChatActi
                         .border(1.dp, if (done) Palette.GlassBorder else Palette.Lavender.copy(alpha = 0.6f), shape)
                 },
                 metro = { if (done) border(2.dp, Palette.TextFaint) else background(Palette.Lavender) },
+                nothing = { if (done) nothingSurface(shape) else nothingSurface(shape).border(1.dp, Color.White, shape) },
             )
             .clickable(enabled = !done) {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -990,7 +992,7 @@ private fun AiSetup(ai: AiChat, onSaved: () -> Unit, onCancel: (() -> Unit)?) {
                 Column(
                     Modifier
                         .weight(1f)
-                        .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f)).border(1.dp, border, RoundedCornerShape(18.dp)) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) })
+                        .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (selected) Palette.Lavender.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f)).border(1.dp, border, RoundedCornerShape(18.dp)) }, metro = { if (selected) this.background(Palette.Lavender) else this.border(2.dp, Palette.TextFaint) }, nothing = { if (selected) this.nothingSurface().border(1.dp, Color.White, RoundedCornerShape(16.dp)) else this.nothingSurface() })
                         .clickable { model = m.id }
                         .padding(12.dp)
                 ) {

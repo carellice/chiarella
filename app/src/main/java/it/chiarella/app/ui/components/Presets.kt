@@ -2,6 +2,7 @@ package it.chiarella.app.ui.components
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.nothingSurface
 import it.chiarella.app.ui.theme.Skeuo
 import it.chiarella.app.ui.theme.metalCap
 import it.chiarella.app.ui.theme.leather
@@ -148,6 +149,7 @@ private fun PresetCard(
                         .border(width = (1f + glow).dp, color = Color.White.copy(alpha = 0.12f + 0.6f * glow), shape = shape)
                 },
                 metro = { background(colors.first()).border(3.dp, Color.White.copy(alpha = glow)) },
+                nothing = { nothingSurface(shape).border(1.dp, androidx.compose.ui.graphics.lerp(Palette.GlassBorder, Color.White, glow), shape) },
             )
             .combinedClickable(
                 interactionSource = interaction,

@@ -2,6 +2,7 @@ package it.chiarella.app.ui.components
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.dotGrid
 import it.chiarella.app.ui.theme.swivel
 import it.chiarella.app.ui.theme.lcd
 import it.chiarella.app.ui.theme.Skeuo
@@ -173,13 +174,14 @@ fun SoundDetailDialog(
                     Row(Modifier.stagger(progress, 3), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         info.moods.forEach { mood ->
                             Text(
-                                "${mood.emoji}  ${mood.label}",
+                                // Nothing: niente emoji, solo l'etichetta.
+                                if (Look.nothing) mood.label.uppercase() else "${mood.emoji}  ${mood.label}",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = Palette.Text,
                                 modifier = Modifier
                                     .clip(if (Look.metro) androidx.compose.ui.graphics.RectangleShape else CircleShape)
-                                    .background(sound.primary.copy(alpha = 0.18f))
-                                    .border(1.dp, sound.secondary.copy(alpha = 0.35f), if (Look.metro) androidx.compose.ui.graphics.RectangleShape else CircleShape)
+                                    .background(if (Look.nothing) Color.Transparent else sound.primary.copy(alpha = 0.18f))
+                                    .border(1.dp, if (Look.nothing) Palette.GlassBorder else sound.secondary.copy(alpha = 0.35f), if (Look.metro) androidx.compose.ui.graphics.RectangleShape else CircleShape)
                                     .padding(horizontal = 12.dp, vertical = 7.dp),
                             )
                         }
@@ -221,11 +223,13 @@ private fun DetailHeader(sound: Sound, active: Boolean, playing: Boolean, volume
         Modifier
             .fillMaxWidth()
             .height(236.dp)
-            .background(
-                Brush.linearGradient(listOf(sound.primary.copy(alpha = 0.75f), sound.secondary.copy(alpha = 0.25f), Palette.Surface))
+            .then(
+                // Nothing: niente colore, solo la griglia di punti.
+                if (Look.nothing) Modifier.background(Color.Black).dotGrid(alpha = 0.6f)
+                else Modifier.background(Brush.linearGradient(listOf(sound.primary.copy(alpha = 0.75f), sound.secondary.copy(alpha = 0.25f), Palette.Surface)))
             ),
     ) {
-        AmbienceCanvas(sound.ambience, sound.primary, sound.secondary, intensity, Modifier.matchParentSize())
+        if (!Look.nothing) AmbienceCanvas(sound.ambience, sound.primary, sound.secondary, intensity, Modifier.matchParentSize())
         // Velo in basso per raccordare la scena con il resto della finestra.
         Box(Modifier.matchParentSize().background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Palette.Surface)))
 
@@ -291,7 +295,7 @@ private fun StatePill(sound: Sound, active: Boolean, live: Boolean, modifier: Mo
     val on by animateFloatAsState(if (active) 1f else 0f, tween(400), label = "statePill")
     Row(
         modifier
-            .look(skeuo = { this.lcd(CircleShape) }, classic = { this.clip(CircleShape).background(lerp(Color.Black.copy(alpha = 0.18f), sound.primary.copy(alpha = 0.6f), on)).border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.85f), on), CircleShape) })
+            .look(skeuo = { this.lcd(CircleShape) }, classic = { this.clip(CircleShape).background(lerp(Color.Black.copy(alpha = 0.18f), sound.primary.copy(alpha = 0.6f), on)).border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.85f), on), CircleShape) }, metro = { this.clip(CircleShape).background(lerp(Color.Black.copy(alpha = 0.18f), sound.primary.copy(alpha = 0.6f), on)).border(1.dp, lerp(Palette.GlassBorder, sound.secondary.copy(alpha = 0.85f), on), CircleShape) }, nothing = { this.clip(CircleShape).border(1.dp, lerp(Palette.GlassBorder, Color.White, on), CircleShape) })
             .padding(horizontal = 12.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -399,6 +403,7 @@ private fun ToggleButton(sound: Sound, active: Boolean, modifier: Modifier = Mod
                         .border(1.dp, Palette.GlassBorder.copy(alpha = on), CircleShape)
                 },
                 metro = { if (active) border(2.dp, Palette.Text) else background(sound.primary) },
+                nothing = { clip(CircleShape).then(if (active) border(1.dp, Palette.GlassBorder, CircleShape) else background(Color.White)) },
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -408,7 +413,7 @@ private fun ToggleButton(sound: Sound, active: Boolean, modifier: Modifier = Mod
             transitionSpec = { (fadeIn(tween(200)) + slideInVertically { it }) togetherWith (fadeOut(tween(150)) + slideOutVertically { -it }) },
             label = "toggleLabel",
         ) { isOn ->
-            Text(if (isOn) "Spegni ${sound.name.lowercase()}" else "Accendi ${sound.name.lowercase()}", style = MaterialTheme.typography.titleMedium, color = when { !Look.skeuo -> Color.White; isOn -> Palette.Text; else -> Skeuo.Ink })
+            Text(if (isOn) "Spegni ${sound.name.lowercase()}" else "Accendi ${sound.name.lowercase()}", style = MaterialTheme.typography.titleMedium, color = when { Look.nothing -> if (isOn) Palette.Text else Color.Black; !Look.skeuo -> Color.White; isOn -> Palette.Text; else -> Skeuo.Ink })
         }
     }
 }

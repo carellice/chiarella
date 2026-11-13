@@ -2,6 +2,7 @@ package it.chiarella.app.ui.components
 
 import it.chiarella.app.ui.theme.look
 import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.nothingSurface
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -247,7 +248,7 @@ private fun TimerChip(label: String, modifier: Modifier = Modifier, danger: Bool
     Box(
         modifier
             .height(52.dp)
-            .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = false).then(if (danger) Modifier.background(Color(0x33FF6B81)) else Modifier) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f)).border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp)) }, metro = { this.border(2.dp, if (danger) Color(0xFFFF9AA9) else Palette.Text) })
+            .look(skeuo = { this.keyCap(RoundedCornerShape(14.dp), brass = false).then(if (danger) Modifier.background(Color(0x33FF6B81)) else Modifier) }, classic = { this.clip(RoundedCornerShape(18.dp)).background(if (danger) Color(0x26FF6B81) else Color.White.copy(alpha = 0.07f)).border(1.dp, if (danger) Color(0x55FF6B81) else Palette.GlassBorder, RoundedCornerShape(18.dp)) }, metro = { this.border(2.dp, if (danger) Color(0xFFFF9AA9) else Palette.Text) }, nothing = { this.nothingSurface().then(if (danger) Modifier.border(1.dp, Palette.Peach, RoundedCornerShape(16.dp)) else Modifier) })
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -261,11 +262,12 @@ fun GradientButton(label: String, modifier: Modifier = Modifier, enabled: Boolea
     Box(
         modifier
             .height(54.dp)
-            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) }, metro = { this.background(Palette.Lavender.copy(alpha = alpha)) })
+            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) }, metro = { this.background(Palette.Lavender.copy(alpha = alpha)) }, nothing = { this.clip(CircleShape).background(Palette.Lavender.copy(alpha = alpha)) })
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (Look.skeuo) Text(label, style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color(0x99FFF6D8), Offset(0f, 1.5f), 0f)), color = Skeuo.Ink)
+        else if (Look.nothing) Text(label.uppercase(), style = MaterialTheme.typography.labelLarge, color = Color.Black)
         else Text(label, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.4f + 0.6f * alpha))
     }
 }
@@ -405,7 +407,7 @@ fun MasterVolumeSheet(
                         Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .look(skeuo = { this.keyCap(RoundedCornerShape(12.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) }, metro = { this.background(c1.copy(alpha = bg)).border(2.dp, Palette.Text) })
+                            .look(skeuo = { this.keyCap(RoundedCornerShape(12.dp), brass = selected) }, classic = { this.clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color.White.copy(alpha = 0.07f), c1.copy(alpha = 0.45f), bg)).border(1.dp, Palette.GlassBorder, RoundedCornerShape(16.dp)) }, metro = { this.background(c1.copy(alpha = bg)).border(2.dp, Palette.Text) }, nothing = { this.nothingSurface().border(1.dp, androidx.compose.ui.graphics.lerp(Palette.GlassBorder, Color.White, bg), RoundedCornerShape(16.dp)) })
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
                                 onChange(level)
