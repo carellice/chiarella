@@ -176,7 +176,7 @@ fun ChatScreen(ai: AiChat, mixer: Mixer, onClose: () -> Unit, onMoment: () -> Un
     val aura = when (mode) {
         ChatMode.BREATHE -> if (Look.skeuo) listOf(Color(0xFFFFB648), Color(0xFFE5794F), Color(0xFF6FB3A0))
             else listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6))
-        else -> mix.active.mapNotNull { Sounds[it]?.primary }.ifEmpty { listOf(Palette.Lavender, Color(0xFFEC4899), Palette.Sky) }
+        else -> mix.active.mapNotNull { Sounds[it]?.primary }.ifEmpty { listOf(Palette.Lavender, ChatPink, Palette.Sky) }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -504,7 +504,7 @@ private fun Conversation(
                             SendMode.SEND -> if (recording) "Invia il vocale" else "Invia"
                             SendMode.MIC -> "Registra un vocale"
                         },
-                        tint = Color.White,
+                        tint = if (m == SendMode.MIC) Palette.Text else Palette.OnAccent,
                         modifier = Modifier.size(22.dp),
                     )
                 }
@@ -598,7 +598,7 @@ private fun TranscribingBubble(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                Icons.Rounded.GraphicEq, null, tint = Color.White,
+                Icons.Rounded.GraphicEq, null, tint = Palette.OnAccent,
                 modifier = Modifier.size(18.dp).graphicsLayer { alpha = 0.5f + 0.5f * sin(t * 2 * PI).toFloat() },
             )
             Spacer(Modifier.width(8.dp))
@@ -673,7 +673,7 @@ private fun Orb(size: androidx.compose.ui.unit.Dp) {
             ),
             radius = r,
         )
-        val colors = listOf(Palette.Lavender, Palette.Sky, Color(0xFFEC4899))
+        val colors = listOf(Palette.Lavender, Palette.Sky, ChatPink)
         colors.forEachIndexed { i, c ->
             val a = spin + i * 2.1f
             val off = r * 0.12f
@@ -698,13 +698,13 @@ private fun UserBubble(text: String, voice: Boolean) {
         ) {
             if (voice) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Mic, null, tint = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Mic, null, tint = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Palette.OnAccent.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Vocale", style = MaterialTheme.typography.labelMedium.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.8f))
+                    Text("Vocale", style = MaterialTheme.typography.labelMedium.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink.copy(alpha = 0.75f) else Palette.OnAccent.copy(alpha = 0.8f))
                 }
                 Spacer(Modifier.height(2.dp))
             }
-            Text(text, style = MaterialTheme.typography.bodyLarge.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink else Color.White)
+            Text(text, style = MaterialTheme.typography.bodyLarge.copy(shadow = null), color = if (Look.skeuo) Skeuo.Ink else Palette.OnAccent)
         }
     }
 }
@@ -800,7 +800,7 @@ private fun ActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
             .look(skeuo = { this.glossyCap(Color(0xFF7A4A1E), elevation = 2.dp) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = Color.White, modifier = Modifier.size(15.dp))
+        Icon(icon, null, tint = Palette.OnAccent, modifier = Modifier.size(15.dp))
     }
 }
 
@@ -1080,12 +1080,12 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .metroTilt(interaction)
             .fillMaxWidth()
             .look(
-                skeuo = { leather(shape, elevation = 8.dp, tint = Color(0xFFEC4899).copy(alpha = 0.08f * glow)) },
+                skeuo = { leather(shape, elevation = 8.dp, tint = ChatPink.copy(alpha = 0.08f * glow)) },
                 classic = {
                     clip(shape)
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFEC4899).copy(alpha = 0.22f * glow), Palette.Lavender.copy(alpha = 0.18f * glow), Color.White.copy(alpha = 0.04f))
+                                listOf(ChatPink.copy(alpha = 0.22f * glow), Palette.Lavender.copy(alpha = 0.18f * glow), Color.White.copy(alpha = 0.04f))
                             )
                         )
                         .border(1.dp, Palette.GlassBorder, shape)
@@ -1100,10 +1100,10 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             Modifier
                 .size(48.dp)
                 .graphicsLayer { val s = 0.94f + 0.08f * glow; scaleX = s; scaleY = s }
-                .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFFEC4899), Palette.Lavender))) }, metro = { this }),
+                .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(ChatPink, Palette.Lavender))) }, metro = { this }),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.EditNote, null, tint = Color.White, modifier = Modifier.size(26.dp))
+            Icon(Icons.Rounded.EditNote, null, tint = Palette.OnAccent, modifier = Modifier.size(26.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
@@ -1116,3 +1116,7 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Icon(Icons.AutoMirrored.Rounded.Send, null, tint = if (Look.metro) Color.White else Palette.TextMuted, modifier = Modifier.size(20.dp))
     }
 }
+
+
+// Dueffe: niente rosa, la chat resta nell'oro come il resto dell'app.
+private val ChatPink get() = if (Look.dueffe) Color(0xFFFFB800) else Color(0xFFEC4899)

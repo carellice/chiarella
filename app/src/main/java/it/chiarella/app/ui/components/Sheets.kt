@@ -145,8 +145,8 @@ private fun ActiveTimer(state: Mixer.State, onExtend: (Int) -> Unit, onCancel: (
         tween(900), label = "ring",
     )
     val sounds = state.active.mapNotNull { Sounds[it] }
-    val c1 = sounds.firstOrNull()?.primary ?: Palette.Lavender
-    val c2 = sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
+    val c1 = if (Look.dueffe) Palette.Lavender else sounds.firstOrNull()?.primary ?: Palette.Lavender
+    val c2 = if (Look.dueffe) Palette.Sky else sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
 
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
@@ -262,13 +262,13 @@ fun GradientButton(label: String, modifier: Modifier = Modifier, enabled: Boolea
     Box(
         modifier
             .height(54.dp)
-            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(CircleShape).background(Brush.horizontalGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) }, metro = { this.background(Palette.Lavender.copy(alpha = alpha)) }, nothing = { this.clip(CircleShape).background(Palette.Lavender.copy(alpha = alpha)) })
+            .look(skeuo = { this.graphicsLayer { this.alpha = alpha }.keyCap(RoundedCornerShape(16.dp), brass = true) }, classic = { this.clip(if (Look.dueffe) RoundedCornerShape(18.dp) else CircleShape).background(Brush.linearGradient(listOf(Palette.Lavender.copy(alpha = alpha), Palette.Sky.copy(alpha = alpha)))) }, metro = { this.background(Palette.Lavender.copy(alpha = alpha)) }, nothing = { this.clip(CircleShape).background(Palette.Lavender.copy(alpha = alpha)) })
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (Look.skeuo) Text(label, style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color(0x99FFF6D8), Offset(0f, 1.5f), 0f)), color = Skeuo.Ink)
         else if (Look.nothing) Text(label.uppercase(), style = MaterialTheme.typography.labelLarge, color = Color.Black)
-        else Text(label, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.4f + 0.6f * alpha))
+        else Text(label, style = MaterialTheme.typography.titleMedium, color = Palette.OnAccent.copy(alpha = 0.4f + 0.6f * alpha))
     }
 }
 
@@ -365,8 +365,8 @@ fun MasterVolumeSheet(
 ) {
     val haptic = LocalHapticFeedback.current
     val sounds = state.active.mapNotNull { Sounds[it] }
-    val c1 = sounds.firstOrNull()?.primary ?: Palette.Lavender
-    val c2 = sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
+    val c1 = if (Look.dueffe) Palette.Lavender else sounds.firstOrNull()?.primary ?: Palette.Lavender
+    val c2 = if (Look.dueffe) Palette.Sky else sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
     LeatherSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),

@@ -40,6 +40,11 @@ fun AuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier =
 
 private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF5B2C83))
 
+// Dueffe: nebulose sempre oro e ambra, un solo accento qualunque suono sia acceso.
+private val GoldColors = listOf(Color(0xFFFFD84D), Color(0xFFFFB800), Color(0xFFB86A00))
+
+private val NightMid get() = if (Look.dueffe) Color(0xFF0B0A08) else Color(0xFF0D1030)
+
 /**
  * Sfondo vivo: tre grandi bagliori che fluttuano lentamente e prendono il colore
  * dei suoni attivi, più un cielo di stelle che brillano.
@@ -48,14 +53,15 @@ private val IdleColors = listOf(Color(0xFF3B2F8F), Color(0xFF1F4E8C), Color(0xFF
 private fun ClassicAuroraBackground(colors: List<Color>, playing: Boolean, modifier: Modifier = Modifier) {
     if (it.chiarella.app.ui.motion.Motion.reduced) {
         androidx.compose.foundation.layout.Box(modifier.then(Modifier.background(
-            Brush.verticalGradient(listOf(Palette.Night, Color(0xFF0D1030), Palette.NightDeep)))))
+            Brush.verticalGradient(listOf(Palette.Night, NightMid, Palette.NightDeep)))))
         return
     }
-    val palette = if (colors.isEmpty()) IdleColors else List(3) { colors[it % colors.size] }
+    val palette = if (Look.dueffe) GoldColors else if (colors.isEmpty()) IdleColors else List(3) { colors[it % colors.size] }
     val c1 by animateColorAsState(palette[0], tween(1600), label = "a1")
     val c2 by animateColorAsState(palette[1], tween(1800), label = "a2")
     val c3 by animateColorAsState(palette[2], tween(2000), label = "a3")
-    val intensity by animateFloatAsState(if (playing) 1f else 0.55f, tween(1400), label = "intensity")
+    // Dueffe: alfa delle nebulose tra 12 e 22%, come da design system.
+    val intensity by animateFloatAsState((if (playing) 1f else 0.55f) * (if (Look.dueffe) 0.5f else 1f), tween(1400), label = "intensity")
 
     val transition = rememberInfiniteTransition(label = "aurora")
     val t by transition.animateFloat(
@@ -80,7 +86,7 @@ private fun ClassicAuroraBackground(colors: List<Color>, playing: Boolean, modif
     }
 
     Canvas(modifier) {
-        drawRect(Brush.verticalGradient(listOf(Palette.Night, Color(0xFF0D1030), Palette.NightDeep)))
+        drawRect(Brush.verticalGradient(listOf(Palette.Night, NightMid, Palette.NightDeep)))
 
         val w = size.width
         val h = size.height
@@ -91,7 +97,7 @@ private fun ClassicAuroraBackground(colors: List<Color>, playing: Boolean, modif
 
         stars.forEach { s ->
             val a = 0.25f + 0.55f * ((sin(twinkle * s.speed + s.phase) + 1f) / 2f)
-            drawCircle(Color.White.copy(alpha = a * 0.8f), radius = s.size * density, center = Offset(s.x * w, s.y * h))
+            drawCircle((if (Look.dueffe) Color(0xFFFFF0AD) else Color.White).copy(alpha = a * 0.8f), radius = s.size * density, center = Offset(s.x * w, s.y * h))
         }
 
         // Velo scuro in basso per dare profondità alla barra del player.

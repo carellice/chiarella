@@ -587,7 +587,9 @@ private fun ClassicBreathFlower(breath: Float, modifier: Modifier = Modifier) {
         0f, (2 * PI).toFloat(), infiniteRepeatable(tween(40_000, easing = LinearEasing)), label = "spin",
     )
     val shimmer by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(3_000), RepeatMode.Reverse), label = "shimmer")
-    val petals = listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6), Color(0xFF5EC8F2), Color(0xFFC4BCFF), Color(0xFF99F6E4))
+    // Dueffe: petali oro, ambra e avorio al posto di blu e viola.
+    val petals = if (Look.dueffe) listOf(Color(0xFFFFD84D), Color(0xFFFFB800), Color(0xFFE09A2B), Color(0xFFFFF0AD), Color(0xFFFFC94A), Color(0xFFB86A00))
+    else listOf(Color(0xFF5B8DEF), Color(0xFF8B7CF6), Color(0xFF14B8A6), Color(0xFF5EC8F2), Color(0xFFC4BCFF), Color(0xFF99F6E4))
     val sparks = remember {
         val r = Random(11)
         List(18) { Triple(r.nextFloat() * 6.28f, 0.75f + r.nextFloat() * 0.35f, 1f + r.nextFloat() * 2f) }
@@ -602,7 +604,7 @@ private fun ClassicBreathFlower(breath: Float, modifier: Modifier = Modifier) {
         // Alone che respira.
         drawCircle(
             Brush.radialGradient(
-                0f to Color(0xFF8B7CF6).copy(alpha = 0.35f + 0.2f * breath),
+                0f to (if (Look.dueffe) Color(0xFFFFB800) else Color(0xFF8B7CF6)).copy(alpha = 0.35f + 0.2f * breath),
                 1f to Color.Transparent,
                 center = c, radius = maxR * (0.7f + 0.3f * breath),
             ),

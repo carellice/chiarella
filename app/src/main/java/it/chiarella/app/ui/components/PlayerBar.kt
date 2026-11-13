@@ -131,16 +131,20 @@ private fun ClassicPlayerBar(
         state.playing -> if (sounds.size == 1) "In riproduzione" else "${sounds.size} suoni in riproduzione"
         else -> "In pausa"
     }
-    val accent = sounds.map { it.primary }.ifEmpty { listOf(Palette.Lavender) }
-    val accent2 = sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
-    val shape = RoundedCornerShape(34.dp)
+    // Dueffe: comandi sempre in oro, un solo accento per schermata.
+    val accent = if (Look.dueffe) listOf(Palette.Lavender) else sounds.map { it.primary }.ifEmpty { listOf(Palette.Lavender) }
+    val accent2 = if (Look.dueffe) Palette.Sky else sounds.getOrNull(1)?.secondary ?: sounds.firstOrNull()?.secondary ?: Palette.Sky
+    val shape = RoundedCornerShape(if (Look.dueffe) 28.dp else 34.dp)
 
     Row(
         modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xF21E2444), Color(0xF2141933))))
-            .border(1.dp, Brush.verticalGradient(listOf(Color(0x33FFFFFF), Color(0x0FFFFFFF))), shape)
+            .then(
+                if (Look.dueffe) Modifier.background(Color(0xF0080705)).border(1.dp, Palette.GlassBorder, shape)
+                else Modifier.background(Brush.verticalGradient(listOf(Color(0xF21E2444), Color(0xF2141933))))
+                    .border(1.dp, Brush.verticalGradient(listOf(Color(0x33FFFFFF), Color(0x0FFFFFFF))), shape)
+            )
             .padding(start = 12.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -219,7 +223,7 @@ private fun ClassicPlayButton(playing: Boolean, c1: Color, c2: Color, onClick: (
             Icon(
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 contentDescription = if (isPlaying) "Pausa" else "Riproduci",
-                tint = Color.White,
+                tint = Palette.OnAccent,
                 modifier = Modifier.size(30.dp),
             )
         }
