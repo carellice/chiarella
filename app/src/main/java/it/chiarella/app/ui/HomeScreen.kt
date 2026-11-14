@@ -476,7 +476,7 @@ private fun RelaxCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .look(skeuo = { this.glossyCap(Palette.Lavender) }, classic = { this.clip(CircleShape).background(BrassBrush) }, metro = { this }, nothing = { this.clip(CircleShape).border(1.dp, Palette.GlassBorder, CircleShape) }),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.SelfImprovement, null, tint = Palette.OnAccent, modifier = Modifier.size(26.dp))
+            Icon(Icons.Rounded.SelfImprovement, null, tint = if (Look.nothing) Palette.Text else Palette.OnAccent, modifier = Modifier.size(26.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {

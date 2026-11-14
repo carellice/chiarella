@@ -1103,7 +1103,7 @@ internal fun ChatCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .look(skeuo = { this.glossyCap(Color(0xFFD9466F)) }, classic = { this.clip(CircleShape).background(Brush.linearGradient(listOf(ChatPink, Palette.Lavender))) }, metro = { this }),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.EditNote, null, tint = Palette.OnAccent, modifier = Modifier.size(26.dp))
+            Icon(Icons.Rounded.EditNote, null, tint = if (Look.nothing) Palette.Text else Palette.OnAccent, modifier = Modifier.size(26.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
