@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import it.chiarella.app.ui.theme.Look
+import it.chiarella.app.ui.theme.Nothing
 import androidx.compose.material3.RadioButton
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,7 +58,7 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
                         Spacer(Modifier.height(4.dp))
                         Text("Mostra l'avviso all'apertura se il volume non è al massimo.", color = Palette.TextMuted)
                     }
-                    Switch(modifier = Modifier.semantics { contentDescription = "Avviso volume del dispositivo" }, checked = preferences.showVolumeNotice,
+                    Switch(colors = switchColors(), modifier = Modifier.semantics { contentDescription = "Avviso volume del dispositivo" }, checked = preferences.showVolumeNotice,
                         onCheckedChange = { onChange(preferences.copy(showVolumeNotice = it)) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -64,7 +67,7 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
                         Spacer(Modifier.height(4.dp))
                         Text("Ferma sfondi, particelle e pulsazioni per rendere l'app più leggera. Audio, timer e respiro continuano a funzionare.", color = Palette.TextMuted)
                     }
-                    Switch(modifier = Modifier.semantics { contentDescription = "Animazioni ridotte" }, checked = preferences.reducedAnimations,
+                    Switch(colors = switchColors(), modifier = Modifier.semantics { contentDescription = "Animazioni ridotte" }, checked = preferences.reducedAnimations,
                         onCheckedChange = { onChange(preferences.copy(reducedAnimations = it)) })
                 }
                 PauseSettings(preferences, onChange)
@@ -118,7 +121,7 @@ private fun PauseSettings(preferences: AppPreferences, onChange: (AppPreferences
                 Spacer(Modifier.height(4.dp))
                 Text("Negli orari scelti arriva una notifica gentile: un tocco e respiri un minuto con un suono acceso.", color = Palette.TextMuted)
             }
-            Switch(modifier = Modifier.semantics { contentDescription = "Pausa di un minuto" }, checked = preferences.pauseReminders,
+            Switch(colors = switchColors(), modifier = Modifier.semantics { contentDescription = "Pausa di un minuto" }, checked = preferences.pauseReminders,
                 onCheckedChange = { on ->
                     if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -143,4 +146,12 @@ private fun PauseSettings(preferences: AppPreferences, onChange: (AppPreferences
             }) { Text("+ Aggiungi un orario") }
         }
     }
+}
+
+/** Nothing: spento, pomello e bordo grigi ben visibili sul nero (il bordo predefinito #333 sparisce). */
+@Composable
+private fun switchColors() = if (Look.nothing) {
+    SwitchDefaults.colors(uncheckedThumbColor = Nothing.TextSecondary, uncheckedBorderColor = Nothing.TextSecondary, uncheckedTrackColor = Nothing.Black)
+} else {
+    SwitchDefaults.colors()
 }
