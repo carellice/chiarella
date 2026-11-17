@@ -12,7 +12,10 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import android.graphics.Color
 import android.media.AudioManager
+import android.content.Intent
 import android.os.Bundle
+import androidx.compose.runtime.LaunchedEffect
+import it.chiarella.app.pause.PauseReminder
 import android.view.View
 import android.view.animation.AnticipateInterpolator
 import androidx.activity.ComponentActivity
@@ -40,9 +43,18 @@ import it.chiarella.app.ui.motion.Motion
 
 class MainActivity : ComponentActivity() {
 
+    /** Aperta dalla notifica della "Pausa di un minuto". */
+    private var openPause by mutableStateOf(false)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == PauseReminder.ACTION_OPEN) openPause = true
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null && intent?.action == PauseReminder.ACTION_OPEN) openPause = true
         volumeControlStream = AudioManager.STREAM_MUSIC
         val app = application as ChiarellaApp
         Motion.reduced = app.store.preferences.value.reducedAnimations
@@ -88,6 +100,10 @@ class MainActivity : ComponentActivity() {
                 var screen by rememberSaveable { mutableStateOf(if (app.store.onboardingDone) Screen.HOME else Screen.GUIDE) }
                 // "Un momento per te" aperto dalla chat: alla chiusura si torna alla chat.
                 var relaxFromChat by rememberSaveable { mutableStateOf(false) }
+                LaunchedEffect(openPause) {
+                    if (openPause && screen != Screen.GUIDE) screen = Screen.PAUSE
+                    openPause = false
+                }
                 AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
@@ -150,6 +166,7 @@ class MainActivity : ComponentActivity() {
                                 screen = Screen.RELAX
                             },
                         )
+                        Screen.PAUSE -> PauseScreen(mixer = app.mixer, onClose = { screen = Screen.HOME })
                         Screen.HOME -> HomeScreen(
                             mixer = app.mixer, store = app.store, updater = app.updater,
                             onShowGuide = { screen = Screen.GUIDE },
@@ -168,4 +185,4 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Screen { HOME, GUIDE, RELAX, CHAT }
+private enum class Screen { HOME, GUIDE, RELAX, CHAT, PAUSE }

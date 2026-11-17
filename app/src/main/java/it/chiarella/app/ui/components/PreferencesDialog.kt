@@ -26,6 +26,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import it.chiarella.app.data.AppPreferences
 import it.chiarella.app.ui.theme.Palette
+import android.Manifest
+import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
+import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import it.chiarella.app.pause.PauseReminder
 
 @Composable
 internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPreferences) -> Unit, onClose: () -> Unit) {
@@ -53,6 +67,7 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
                     Switch(modifier = Modifier.semantics { contentDescription = "Animazioni ridotte" }, checked = preferences.reducedAnimations,
                         onCheckedChange = { onChange(preferences.copy(reducedAnimations = it)) })
                 }
+                PauseSettings(preferences, onChange)
                 Column(Modifier.selectableGroup()) {
                     Text("Stile grafico", color = Palette.Text)
                     Spacer(Modifier.height(4.dp))
@@ -82,4 +97,50 @@ internal fun PreferencesDialog(preferences: AppPreferences, onChange: (AppPrefer
         },
         confirmButton = { TextButton(onClick = onClose) { Text("Chiudi") } },
     )
+}
+
+/** "Pausa di un minuto": interruttore e orari (al massimo tre). */
+@Composable
+private fun PauseSettings(preferences: AppPreferences, onChange: (AppPreferences) -> Unit) {
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    val times = preferences.pauseTimes.sorted()
+
+    fun pickTime(initial: Int, onPicked: (Int) -> Unit) {
+        TimePickerDialog(context, { _, h, m -> onPicked(h * 60 + m) }, initial / 60, initial % 60,
+            DateFormat.is24HourFormat(context)).show()
+    }
+
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Pausa di un minuto", color = Palette.Text)
+                Spacer(Modifier.height(4.dp))
+                Text("Negli orari scelti arriva una notifica gentile: un tocco e respiri un minuto con un suono acceso.", color = Palette.TextMuted)
+            }
+            Switch(modifier = Modifier.semantics { contentDescription = "Pausa di un minuto" }, checked = preferences.pauseReminders,
+                onCheckedChange = { on ->
+                    if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    onChange(preferences.copy(pauseReminders = on))
+                })
+        }
+        if (preferences.pauseReminders) {
+            times.forEach { t ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { pickTime(t) { n -> onChange(preferences.copy(pauseTimes = times - t + n)) } }) {
+                        Text("%02d:%02d".format(t / 60, t % 60))
+                    }
+                    Spacer(Modifier.weight(1f))
+                    if (times.size > 1) IconButton(onClick = { onChange(preferences.copy(pauseTimes = times - t)) }) {
+                        Icon(Icons.Rounded.Close, "Togli la pausa delle %02d:%02d".format(t / 60, t % 60), tint = Palette.TextMuted)
+                    }
+                }
+            }
+            if (times.size < PauseReminder.MAX_TIMES) TextButton(onClick = {
+                pickTime(times.lastOrNull()?.plus(120)?.rem(24 * 60) ?: (12 * 60)) { n -> onChange(preferences.copy(pauseTimes = times + n)) }
+            }) { Text("+ Aggiungi un orario") }
+        }
+    }
 }

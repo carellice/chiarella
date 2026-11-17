@@ -436,7 +436,11 @@ private fun PassionBadge(category: PassionCategory, size: androidx.compose.ui.un
 // ------------------------------------------------------------------ respiro
 
 @Composable
-internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) {
+internal fun BreathingExercise(
+    onDone: () -> Unit,
+    onSkip: () -> Unit = onDone,
+    title: String = "Prima di tutto, un minuto per te",
+) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current.applicationContext
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -505,7 +509,7 @@ internal fun BreathingExercise(onDone: () -> Unit, onSkip: () -> Unit = onDone) 
         Text("RESPIRA CON ME", style = MaterialTheme.typography.labelSmall, color = Palette.TextMuted)
         Spacer(Modifier.height(4.dp))
         Text(
-            "Prima di tutto, un minuto per te",
+            title,
             style = MaterialTheme.typography.headlineMedium, color = Palette.Text, textAlign = TextAlign.Center,
         )
 

@@ -27,15 +27,25 @@ class Store(context: Context) {
         // "skeuomorphism" è la vecchia preferenza booleana, letta solo se lo stile non è mai stato scelto.
         style = prefs.getString("ui_style", null)?.let { v -> UiStyle.entries.firstOrNull { it.name == v } }
             ?: if (prefs.getBoolean("skeuomorphism", false)) UiStyle.SKEUO else UiStyle.CLASSIC,
+        pauseReminders = prefs.getBoolean("pause_reminders", false),
+        pauseTimes = prefs.getString("pause_times", null)?.split(',')?.mapNotNull { it.toIntOrNull() }
+            ?: AppPreferences().pauseTimes,
     ))
     val preferences: StateFlow<AppPreferences> = _preferences.asStateFlow()
 
     fun setPreferences(value: AppPreferences) {
         prefs.edit().putBoolean("show_volume_notice", value.showVolumeNotice)
             .putBoolean("reduced_animations", value.reducedAnimations)
-            .putString("ui_style", value.style.name).apply()
+            .putString("ui_style", value.style.name)
+            .putBoolean("pause_reminders", value.pauseReminders)
+            .putString("pause_times", value.pauseTimes.joinToString(",")).apply()
         _preferences.value = value
     }
+
+    /** Giorno (epoch day) in cui l'utente ha scelto «Salta oggi» per le pause. */
+    var pauseSkippedDay: Long
+        get() = prefs.getLong("pause_skipped_day", -1L)
+        set(value) = prefs.edit().putLong("pause_skipped_day", value).apply()
 
     private val _presets = MutableStateFlow(loadPresets())
     val presets: StateFlow<List<Preset>> = _presets.asStateFlow()

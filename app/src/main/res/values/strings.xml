@@ -4,4 +4,6 @@
     <string name="widget_description">Avvia, metti in pausa e scegli i tuoi profili di suoni rilassanti.</string>
     <string name="channel_playback">Riproduzione</string>
     <string name="channel_playback_desc">Controlli dei suoni in riproduzione e timer di spegnimento</string>
+    <string name="channel_pause">Pausa di un minuto</string>
+    <string name="channel_pause_desc">Promemoria gentili per fermarti un minuto e respirare</string>
 </resources>

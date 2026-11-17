@@ -5,6 +5,7 @@ import androidx.glance.appwidget.updateAll
 import it.chiarella.app.ai.AiChat
 import it.chiarella.app.audio.Mixer
 import it.chiarella.app.data.Store
+import it.chiarella.app.pause.PauseReminder
 import it.chiarella.app.update.Updater
 import it.chiarella.app.widget.ChiarellaWidget
 import kotlinx.coroutines.FlowPreview
@@ -46,6 +47,12 @@ class ChiarellaApp : Application() {
                 .drop(1)
                 .debounce(250)
                 .collect { runCatching { ChiarellaWidget().updateAll(this@ChiarellaApp) } }
+        }
+
+        // Riprogramma la "Pausa di un minuto" all'avvio e quando cambiano gli orari.
+        scope.launch {
+            store.preferences.map { it.pauseReminders to it.pauseTimes }.distinctUntilChanged()
+                .collect { PauseReminder.schedule(this@ChiarellaApp) }
         }
     }
 }
