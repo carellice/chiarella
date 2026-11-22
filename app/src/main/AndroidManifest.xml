@@ -38,6 +38,20 @@
             </intent-filter>
         </activity>
 
+        <!-- Play/pausa dall'esterno (Kanso): trasparente, si chiude da sola e non resta tra le recenti. -->
+        <activity
+            android:name=".playback.ToggleActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="it.chiarella.app.TOGGLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".playback.PlaybackService"
             android:exported="false"
